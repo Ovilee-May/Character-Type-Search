@@ -130,7 +130,7 @@
 	<script>
 	let characters = [];
 
-	fetch("characters.json?nocache=" + Date.now())
+	fetch("characters.json")
 	  .then(res => res.json())
 	  .then(data => {
 		characters = data;
@@ -416,3 +416,4 @@
 
 	</body>
 	</html>
+
