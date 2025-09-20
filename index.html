@@ -31,6 +31,9 @@
 
 	<h1>Find Your Most Similar Characters</h1>
 
+	<label>Search (by name, show)</label>
+	<input id="searchBox" type="text" placeholder="Type to search...">
+
 
 	<div class="container">
 	  <div class="form-column">
@@ -358,6 +361,21 @@
 
 	  let filteredChars = characters;
 
+		const searchQuery = document.getElementById("searchBox").value.trim().toLowerCase();
+
+	if (searchQuery !== "") {
+	  filteredChars = filteredChars.filter(c => {
+	    const fields = [
+	      c.name,
+	      c.notes,
+	      c.genre
+	    ].map(f => String(f || "").toLowerCase());
+	
+	    return fields.some(f => f.includes(searchQuery));
+	  });
+	}
+
+		
 	  if (genreFilter !== '') {
 		filteredChars = filteredChars.filter(c => {
 		  if (!c || c.genre == null) return false;
@@ -405,6 +423,7 @@
 
 	</body>
 	</html>
+
 
 
 
