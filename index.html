@@ -1,0 +1,425 @@
+	<!doctype html>
+	<html lang="en">
+	<head>
+	<meta charset="utf-8" />
+	<title>Character Similarity Finder — Genre Filter Fixed</title>
+	<style>
+	  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto; margin: 20px; color:#111; }
+	  label { display:block; margin-top:12px; font-size:14px; }
+	  select,input { margin-top:6px; padding:8px; width:320px; max-width:100%; }
+	  button { margin-top:12px; padding:10px 14px; border-radius:8px; cursor:pointer; }
+	  .results { margin-top:22px; max-width:800px; }
+	  .character { border-bottom:1px solid #e6e6e6; padding:10px 0; }
+	  .muted { color:#666; font-size:13px; }
+
+	  /* NEW: flex layout */
+	  .container {
+		display: flex;
+		gap: 60px;
+		align-items: flex-start;
+	  }
+	  .form-column {
+		flex: 1;
+		max-width: 500px;
+	  }
+	  .results-column {
+		flex: 2;
+	  }
+	</style>
+	</head>
+	<body>
+
+	<h1>Find Your Most Similar Characters</h1>
+
+	<!-- NEW flex wrapper -->
+	<div class="container">
+	  <div class="form-column">
+		<form id="testForm" onsubmit="return false;">
+		  <label>MBTI (function pair)</label>
+		  <select id="mbti"><option value="">— any —</option>
+			<option value="NiTe">NiTe</option><option value="NiFe">NiFe</option><option value="NiTi">NiTi</option>
+			<option value="NeFi">NeFi</option><option value="NeTi">NeTi</option><option value="NeFe">NeFe</option>
+			<option value="SiTe">SiTe</option><option value="SiFe">SiFe</option><option value="SiTi">SiTi</option>
+			<option value="SeFi">SeFi</option><option value="SeTi">SeTi</option><option value="SeFe">SeFe</option>
+			<option value="TiNe">TiNe</option><option value="TiSe">TiSe</option><option value="TiSi">TiSi</option>
+			<option value="TeNi">TeNi</option><option value="TeSi">TeSi</option><option value="TeSe">TeSe</option>
+			<option value="FiNe">FiNe</option><option value="FiSe">FiSe</option><option value="FiSi">FiSi</option>
+			<option value="FeNi">FeNi</option><option value="FeSi">FeSi</option><option value="FeSe">FeSe</option>
+			<option value="NiFi">NiFi</option><option value="NeTe">NeTe</option><option value="SiFi">SiFi</option>
+			<option value="SeTe">SeTe</option><option value="TiNi">TiNi</option><option value="TeNe">TeNe</option>
+			<option value="FiNi">FiNi</option><option value="FeNe">FeNe</option>
+		  </select>
+
+		  <label>MBTI (4-letter)</label>
+		  <select id="fourletter"><option value="">— any —</option>
+			<option value="INTJ">INTJ</option><option value="INFJ">INFJ</option><option value="INTP">INTP</option>
+			<option value="INFP">INFP</option><option value="ENTJ">ENTJ</option><option value="ENTP">ENTP</option>
+			<option value="ENFJ">ENFJ</option><option value="ENFP">ENFP</option><option value="ISTJ">ISTJ</option>
+			<option value="ISFJ">ISFJ</option><option value="ISTP">ISTP</option><option value="ISFP">ISFP</option>
+			<option value="ESTJ">ESTJ</option><option value="ESFJ">ESFJ</option><option value="ESTP">ESTP</option>
+			<option value="ESFP">ESFP</option>
+		  </select>
+
+		  <label>Enneagram (example: 5)</label>
+		  <input id="enneagram" type="text" placeholder="e.g. 5">
+
+		  <label>Enneagram Instinct</label>
+		  <select id="cep">
+			<option value="">— any —</option>
+			<option value="SO1">SO1</option><option value="SP1">SP1</option><option value="SX1">SX1</option>
+			<option value="SO2">SO2</option><option value="SP2">SP2</option><option value="SX2">SX2</option>
+			<option value="SO3">SO3</option><option value="SP3">SP3</option><option value="SX3">SX3</option>
+			<option value="SO4">SO4</option><option value="SP4">SP4</option><option value="SX4">SX4</option>
+			<option value="SO5">SO5</option><option value="SP5">SP5</option><option value="SX5">SX5</option>
+			<option value="SO6">SO6</option><option value="SP6">SP6</option><option value="SX6">SX6</option>
+			<option value="SO7">SO7</option><option value="SP7">SP7</option><option value="SX7">SX7</option>
+			<option value="SO8">SO8</option><option value="SP8">SP8</option><option value="SX8">SX8</option>
+			<option value="SO9">SO9</option><option value="SP9">SP9</option><option value="SX9">SX9</option>
+		  </select>
+
+		  <label>Socionics subtype</label>
+		  <input id="socionics" type="text" placeholder="e.g. ILI-Te">
+
+		  <label>Neurotype</label>
+		  <select id="neurotype">
+			<option value="">— any —</option>
+			<option value="Computer">Computer</option><option value="Analyst">Analyst</option>
+			<option value="Fascinator">Fascinator</option><option value="Newtype">Newtype</option>
+			<option value="Technician">Technician</option><option value="Astute">Astute</option>
+			<option value="Overseer">Overseer</option><option value="Aesthetician">Aesthetician</option>
+			<option value="Contemplative">Contemplative</option><option value="Understanding">Understanding</option>
+			<option value="Externalist">Externalist</option><option value="Sensate">Sensate</option>
+			<option value="Bookkeeper">Bookkeeper</option><option value="Level-Headed">Level-Headed</option>
+			<option value="Clearsighted">Clearsighted</option><option value="Instinctual">Instinctual</option>
+		  </select>
+
+		  <label>Classpect</label>
+		  <input id="classpect" type="text" placeholder="e.g. Seer of Light">
+
+		  <label>Attitudinal Psyche</label>
+		  <input id="ap" type="text" placeholder="e.g. FEVL">
+
+		  <label>Genre (filter)</label>
+		  <select id="genreFilter"><option value="">All</option></select>
+
+		  <label>Show/Series</label>
+		  <select id="notesFilter"><option value="">All</option></select>
+
+		  <br><br>
+		  <button type="button" id="findBtn">Find Matches</button>
+
+		  <h3>Scoring Toggles</h3>
+		  <label><input type="checkbox" id="useMbti" checked> Use MBTI (w/ Jumpers)</label>
+		  <label><input type="checkbox" id="use4Letter" checked> Use MBTI (4-letter)</label>
+		  <label><input type="checkbox" id="useEnneagram" checked> Use Enneagram</label>
+		  <label><input type="checkbox" id="useSocionics" checked> Use Socionics</label>
+		  <label><input type="checkbox" id="useNeurotype" checked> Use Neurotype</label>
+		  <label><input type="checkbox" id="useClasspect" checked> Use Classpect</label>
+		  <label><input type="checkbox" id="useAp" checked> Use Attitudinal Psyche</label>
+		  <label><input type="checkbox" id="useCep" checked> Use Enneagram Instinct</label>
+
+		</form>
+	  </div>
+
+	  <!-- Results now on the right -->
+	  <div class="results-column">
+		<div id="results" class="results"></div>
+	  </div>
+	</html>
+
+	<script>
+	let characters = [];
+
+	fetch("characters.json?nocache=" + Date.now())
+	  .then(res => res.json())
+	  .then(data => {
+		characters = data;
+		console.log("Characters loaded:", characters.length);
+		console.log("Example new character:", characters[characters.length - 1]);
+		populateNotesFilter();
+		populateGenreFilter();
+	  })
+	  .catch(err => {
+		console.error("Error loading characters.json", err);
+	  });
+
+
+	const neuroGrid = {
+	  "Computer":[0,0],"Analyst":[1,0],"Fascinator":[2,0],"Newtype":[3,0],
+	  "Technician":[0,1],"Astute":[1,1],"Overseer":[2,1],"Aesthetician":[3,1],
+	  "Contemplative":[0,2],"Understanding":[1,2],"Externalist":[2,2],"Sensate":[3,2],
+	  "Bookkeeper":[0,3],"Level-Headed":[1,3],"Clearsighted":[2,3],"Instinctual":[3,3]
+	};
+
+	function populateGenreFilter() {
+	  if (characters.length === 0) return;
+	  
+	  const genreSet = new Set();
+	  characters.forEach(char => {
+		if (char && char.genre != null) {
+		  // coerce to string, split on '/', trim each
+		  const gStr = String(char.genre);
+		  gStr.split('/').forEach(genre => {
+			const t = genre.trim();
+			if (t !== '') genreSet.add(t);
+		  });
+		}
+	  });
+	  
+	  const genreSelect = document.getElementById("genreFilter");
+	  genreSelect.innerHTML = '<option value="">All</option>';
+	  
+	  // natural sort (numbers handled sensibly)
+	  Array.from(genreSet).sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'})).forEach(genre => {
+		const option = document.createElement("option");
+		option.value = genre;
+		option.textContent = genre;
+		genreSelect.appendChild(option);
+	  });
+	}
+
+	function populateNotesFilter() {
+	  if (characters.length === 0) return;
+
+	  const notesSet = new Set();
+
+	  characters.forEach(c => {
+		if (c && c.notes != null) {
+		  // notes might be string, number, or array. handle all.
+		  if (Array.isArray(c.notes)) {
+			c.notes.forEach(item => {
+			  if (item != null) {
+				const s = String(item).trim();
+				if (s !== '') notesSet.add(s);
+			  }
+			});
+		  } else {
+			// coerce to string and split on '/'
+			const s = String(c.notes);
+			s.split('/').forEach(part => {
+			  const t = part.trim();
+			  if (t !== '') notesSet.add(t);
+			});
+		  }
+		}
+	  });
+
+	  const select = document.getElementById("notesFilter");
+	  select.innerHTML = '<option value="">All</option>'; // reset to include "All"
+
+	  // natural sort (handles numbers like "86" nicely)
+	  Array.from(notesSet).sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'})).forEach(n => {
+		const opt = document.createElement("option");
+		opt.value = n;
+		opt.textContent = n;
+		select.appendChild(opt);
+	  });
+	}
+
+	function parsePair(raw){
+	  return raw ? raw.match(/.{1,2}/g) || [] : [];
+	}
+
+	function mbtiPairScore(a, b) {
+	  const A = parsePair(a), B = parsePair(b);
+	  if (A.length === 0 || B.length === 0) return 0;
+	  if (A[0] === B[0] && A[1] === B[1]) return 1;
+	  if (A[0] === B[0]) return 0.6;
+	  if (A[1] === B[1]) return 0.4;
+	  if (A.some(x => B.includes(x))) return 0.2;
+	  return 0;
+	}
+
+	function cepMatch(userCep, charCep) {
+	  if (!userCep || !charCep) return 0;
+	  const u = String(userCep).trim().toUpperCase();
+	  const c = String(charCep).trim().toUpperCase();
+	  if (u === c) return 1;
+	  return u[2] === c[2] ? 0.5 : 0;
+	}
+
+	function neurotypeScore(uT, cT){
+	  if (!uT || !cT) return 0;
+	  const u = neuroGrid[uT.trim()], c = neuroGrid[cT.trim()];
+	  if (!u || !c) return 0;
+	  const dx = u[0]-c[0], dy = u[1]-c[1];
+	  return 1 - Math.sqrt(dx*dx+dy*dy)/Math.sqrt(18);
+	}
+
+	function textMatch(a,b){
+	  if (!a || !b) return 0;
+	  return a.trim().toLowerCase() === b.trim().toLowerCase() ? 1 : 0;
+	}
+
+	function fourLetterMatch(u, c) {
+	  if (!u || !c) return 0;
+	  const U = u.trim().toUpperCase();
+	  const C = c.trim().toUpperCase();
+	  if (U === C) return 1;
+	  
+	  // partial similarity: score by position
+	  let matches = 0;
+	  for (let i=0; i<4; i++) {
+		if (U[i] === C[i]) matches++;
+	  }
+	  return matches / 4;  // 0.25 per matching letter
+	}
+
+	function enneagramMatch(userInput, charEnneagram) {
+	  if (!userInput || !charEnneagram) return 0;
+	  const uStr = String(userInput).trim();
+	  const cStr = String(charEnneagram).trim();
+	  const uMatch = uStr.match(/\d/);
+	  const cMatch = cStr.match(/\d/);
+	  if (!uMatch || !cMatch) return 0;
+	  return uMatch[0] === cMatch[0] ? 1 : 0;
+	}
+
+	function computeScore(user, char) {
+	  let score = 0;
+
+	  // weights for each factor
+	  const weights = {
+		mbti: 0.3,
+		fourletter: 0.2,
+		enneagram: 0.15,
+		socionics: 0.1,
+		neurotype: 0.1,
+		classpect: 0.075,
+		ap: 0.075,
+		cep: 0.05
+	  };
+
+	  const active = [];
+	  if (document.getElementById("useMbti").checked) active.push("mbti");
+	  if (document.getElementById("useEnneagram").checked) active.push("enneagram");
+	  if (document.getElementById("useSocionics").checked) active.push("socionics");
+	  if (document.getElementById("useNeurotype").checked) active.push("neurotype");
+	  if (document.getElementById("useClasspect").checked) active.push("classpect");
+	  if (document.getElementById("useAp").checked) active.push("ap");
+	  if (document.getElementById("useCep").checked) active.push("cep");
+	  if (document.getElementById("use4Letter").checked) active.push("fourletter");
+
+
+	  if (active.length === 0) return 0; // avoid divide by zero
+
+	  // normalize weights so they sum to 1 across active factors
+	  // normalize equally instead of by predefined weights
+	  const totalWeight = active.reduce((sum, key) => sum + weights[key], 0);
+	  
+	  const w = (key) => weights[key] / totalWeight;
+
+
+	  // apply scores with normalized weights
+	  if (active.includes("mbti")) {
+		score += mbtiPairScore(user.mbti, char.mbti) * w("mbti");
+	  }
+	  if (active.includes("enneagram")) {
+		score += enneagramMatch(user.enneagram, char.enneagram) * w("enneagram");
+	  }
+	  if (active.includes("socionics")) {
+		score += textMatch(user.socionics, char.socionics) * w("socionics");
+	  }
+	  if (active.includes("neurotype")) {
+		score += neurotypeScore(user.neurotype, char.neurotype) * w("neurotype");
+	  }
+	  if (active.includes("classpect")) {
+		score += textMatch(user.classpect, char.classpect) * w("classpect");
+	  }
+	  if (active.includes("ap")) {
+		score += textMatch(user.ap, char.ap) * w("ap");
+	  }
+	if (active.includes("fourletter")) {
+	  score += fourLetterMatch(user.fourletter, char.fourletter) * w("fourletter");
+	}
+
+	  if (active.includes("cep")) {
+		score += cepMatch(user.cep, char.cep) * w("cep");
+	  }
+
+	  return score;
+	}
+
+
+	function runSimilarityCheck(){
+	  if (characters.length === 0) {
+		document.getElementById("results").innerHTML = "<h2>No Data</h2><p>No character data loaded. Please ensure characters.json exists and is accessible.</p>";
+		return;
+	  }
+
+		const user = {
+		  mbti: document.getElementById("mbti").value.trim(),
+		  enneagram: document.getElementById("enneagram").value.trim(),
+		  socionics: document.getElementById("socionics").value.trim(),
+		  neurotype: document.getElementById("neurotype").value.trim(),
+		  classpect: document.getElementById("classpect").value.trim(),
+		  ap: document.getElementById("ap").value.trim(),
+		  cep: document.getElementById("cep").value.trim(),
+		  fourletter: document.getElementById("fourletter").value.trim(),
+		};
+
+	  const genreFilterRaw = document.getElementById("genreFilter").value;
+	  const genreFilter = genreFilterRaw ? String(genreFilterRaw).trim().toLowerCase() : '';
+
+	  const selectedNotesRaw = document.getElementById("notesFilter").value;
+	  const selectedNotes = selectedNotesRaw ? String(selectedNotesRaw).trim().toLowerCase() : '';
+
+	  let filteredChars = characters;
+
+	  // genre filter (normalize values to strings before splitting)
+	  if (genreFilter !== '') {
+		filteredChars = filteredChars.filter(c => {
+		  if (!c || c.genre == null) return false;
+		  const gStr = String(c.genre).toLowerCase();
+		  return gStr.split("/").map(s => s.trim()).some(src => src === genreFilter);
+		});
+	  }
+
+	  // notes filter — handle numbers / arrays / strings safely
+	  if (selectedNotes !== '') {
+		filteredChars = filteredChars.filter(c => {
+		  if (!c || c.notes == null) return false;
+
+		  let noteOptions = [];
+
+		  if (Array.isArray(c.notes)) {
+			noteOptions = c.notes.map(x => String(x).trim().toLowerCase()).filter(x => x !== '');
+		  } else {
+			noteOptions = String(c.notes).split("/").map(x => x.trim().toLowerCase()).filter(x => x !== '');
+		  }
+
+		  return noteOptions.includes(selectedNotes);
+		});
+	  }
+
+	  if (filteredChars.length === 0) {
+		document.getElementById("results").innerHTML = "<h2>No Results</h2><p>No characters found matching the selected filters.</p>";
+		return;
+	  }
+
+	  const scored = filteredChars.map(c => ({ ...c, similarity: computeScore(user, c) }));
+	  scored.sort((a,b) => b.similarity - a.similarity);
+
+	  const top = scored.slice(0,25);
+	  document.getElementById("results").innerHTML = "<h2>Top Matches</h2>" + top.map(c=>`
+		<div class="character">
+		  <strong>${c.name || 'Unnamed'}</strong> (${c.notes || 'N/A'}) — ${Math.round((c.similarity || 0) * 100)}%<br>
+		  <span class="muted"> 4letter MBTI: ${c.fourletter || 'N/A'}, Function MBTI: ${c.mbti || 'N/A'}, Enneagram: ${c.enneagram || 'N/A'}, Instinct: ${c.cep || 'N/A'}, Socionics: ${c.socionics || 'N/A'}, 
+		  Neurotype: ${c.neurotype || 'N/A'}, Genre: ${c.genre || 'N/A'}</span>
+		</div>
+	  `).join("");
+	}
+
+	document.getElementById("findBtn").addEventListener("click",runSimilarityCheck);
+
+	document.addEventListener('DOMContentLoaded', function() {
+	  // If characters already loaded (unlikely before fetch resolves), populate
+	  if (characters.length > 0) {
+		populateGenreFilter();
+		populateNotesFilter();
+	  }
+	});
+	</script>
+
+	</body>
+	</html>
