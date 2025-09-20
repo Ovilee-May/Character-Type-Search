@@ -131,19 +131,14 @@
 	let characters = [];
 
 	fetch("characters.json")
-	  .then(res => res.json())
+	  .then(response => response.json())
 	  .then(data => {
-		characters = data;
-		console.log("Characters loaded:", characters.length);
-		console.log("Example new character:", characters[characters.length - 1]);
+	    characters = data;
 		populateNotesFilter();
 		populateGenreFilter();
 	  })
-	  .catch(err => {
-		console.error("Error loading characters.json", err);
-	  });
-
-
+	  .catch(err => console.error("Error loading characters.json:", err));
+		
 	const neuroGrid = {
 	  "Computer":[0,0],"Analyst":[1,0],"Fascinator":[2,0],"Newtype":[3,0],
 	  "Technician":[0,1],"Astute":[1,1],"Overseer":[2,1],"Aesthetician":[3,1],
@@ -416,4 +411,5 @@
 
 	</body>
 	</html>
+
 
