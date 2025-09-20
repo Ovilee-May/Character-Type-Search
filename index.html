@@ -250,8 +250,16 @@
 	  if (!u || !c) return 0;
 	  const U = u.trim().toUpperCase();
 	  const C = c.trim().toUpperCase();
+	
 	  if (U === C) return 1;
+	
+	  let matches = 0;
+	  for (let i=0; i<4; i++) {
+	    if (U[i] === C[i]) matches++;
+	  }
+	  return matches / 4;
 	}
+
 
 	  let matches = 0;
 	  for (let i=0; i<4; i++) {
@@ -404,6 +412,7 @@
 
 	</body>
 	</html>
+
 
 
 
