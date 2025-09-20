@@ -260,13 +260,6 @@
 	  return matches / 4;
 	}
 
-
-	  let matches = 0;
-	  for (let i=0; i<4; i++) {
-		if (U[i] === C[i]) matches++;
-	  }
-	  return matches / 4;  
-
 	function enneagramMatch(userInput, charEnneagram) {
 	  if (!userInput || !charEnneagram) return 0;
 	  const uStr = String(userInput).trim();
@@ -412,6 +405,7 @@
 
 	</body>
 	</html>
+
 
 
 
