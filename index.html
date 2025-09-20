@@ -31,7 +31,7 @@
 
 	<h1>Find Your Most Similar Characters</h1>
 
-	<!-- NEW flex wrapper -->
+
 	<div class="container">
 	  <div class="form-column">
 		<form id="testForm" onsubmit="return false;">
@@ -121,7 +121,7 @@
 		</form>
 	  </div>
 
-	  <!-- Results now on the right -->
+	
 	  <div class="results-column">
 		<div id="results" class="results"></div>
 	  </div>
@@ -157,7 +157,7 @@
 	  const genreSet = new Set();
 	  characters.forEach(char => {
 		if (char && char.genre != null) {
-		  // coerce to string, split on '/', trim each
+	
 		  const gStr = String(char.genre);
 		  gStr.split('/').forEach(genre => {
 			const t = genre.trim();
@@ -169,7 +169,7 @@
 	  const genreSelect = document.getElementById("genreFilter");
 	  genreSelect.innerHTML = '<option value="">All</option>';
 	  
-	  // natural sort (numbers handled sensibly)
+
 	  Array.from(genreSet).sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'})).forEach(genre => {
 		const option = document.createElement("option");
 		option.value = genre;
@@ -185,7 +185,7 @@
 
 	  characters.forEach(c => {
 		if (c && c.notes != null) {
-		  // notes might be string, number, or array. handle all.
+	
 		  if (Array.isArray(c.notes)) {
 			c.notes.forEach(item => {
 			  if (item != null) {
@@ -194,7 +194,7 @@
 			  }
 			});
 		  } else {
-			// coerce to string and split on '/'
+	
 			const s = String(c.notes);
 			s.split('/').forEach(part => {
 			  const t = part.trim();
@@ -205,9 +205,9 @@
 	  });
 
 	  const select = document.getElementById("notesFilter");
-	  select.innerHTML = '<option value="">All</option>'; // reset to include "All"
+	  select.innerHTML = '<option value="">All</option>';
 
-	  // natural sort (handles numbers like "86" nicely)
+
 	  Array.from(notesSet).sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'})).forEach(n => {
 		const opt = document.createElement("option");
 		opt.value = n;
@@ -257,13 +257,12 @@
 	  const C = c.trim().toUpperCase();
 	  if (U === C) return 1;
 	  
-	  // partial similarity: score by position
+
 	  let matches = 0;
 	  for (let i=0; i<4; i++) {
 		if (U[i] === C[i]) matches++;
 	  }
-	  return matches / 4;  // 0.25 per matching letter
-	}
+	  return matches / 4;  
 
 	function enneagramMatch(userInput, charEnneagram) {
 	  if (!userInput || !charEnneagram) return 0;
@@ -278,7 +277,7 @@
 	function computeScore(user, char) {
 	  let score = 0;
 
-	  // weights for each factor
+
 	  const weights = {
 		mbti: 0.3,
 		fourletter: 0.2,
@@ -301,16 +300,13 @@
 	  if (document.getElementById("use4Letter").checked) active.push("fourletter");
 
 
-	  if (active.length === 0) return 0; // avoid divide by zero
+	  if (active.length === 0) return 0;
 
-	  // normalize weights so they sum to 1 across active factors
-	  // normalize equally instead of by predefined weights
 	  const totalWeight = active.reduce((sum, key) => sum + weights[key], 0);
 	  
 	  const w = (key) => weights[key] / totalWeight;
 
 
-	  // apply scores with normalized weights
 	  if (active.includes("mbti")) {
 		score += mbtiPairScore(user.mbti, char.mbti) * w("mbti");
 	  }
@@ -366,7 +362,6 @@
 
 	  let filteredChars = characters;
 
-	  // genre filter (normalize values to strings before splitting)
 	  if (genreFilter !== '') {
 		filteredChars = filteredChars.filter(c => {
 		  if (!c || c.genre == null) return false;
@@ -375,7 +370,6 @@
 		});
 	  }
 
-	  // notes filter — handle numbers / arrays / strings safely
 	  if (selectedNotes !== '') {
 		filteredChars = filteredChars.filter(c => {
 		  if (!c || c.notes == null) return false;
@@ -413,7 +407,6 @@
 	document.getElementById("findBtn").addEventListener("click",runSimilarityCheck);
 
 	document.addEventListener('DOMContentLoaded', function() {
-	  // If characters already loaded (unlikely before fetch resolves), populate
 	  if (characters.length > 0) {
 		populateGenreFilter();
 		populateNotesFilter();
