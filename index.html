@@ -111,6 +111,10 @@
 		  <br><br>
 		  <button type="button" id="findBtn">Find Matches</button>
 
+		<button type="button" onclick="makePreset()">Make Preset</button>
+		<div id="presetsContainer" style="margin-top:15px;"></div>
+
+			
 		  <h3>Scoring Toggles</h3>
 		  <label><input type="checkbox" id="useMbti" checked> Use MBTI (w/ Jumpers)</label>
 		  <label><input type="checkbox" id="use4Letter" checked> Use MBTI (4-letter)</label>
@@ -419,10 +423,60 @@
 	}
 
 	document.getElementById("findBtn").addEventListener("click",runSimilarityCheck);
+
+		
+let presets = JSON.parse(localStorage.getItem("presets") || "[]");
+
+function savePresets() {
+  localStorage.setItem("presets", JSON.stringify(presets));
+}
+
+function makePreset() {
+  const preset = {
+    mbti: document.getElementById("mbti").value.trim(),
+    enneagram: document.getElementById("enneagram").value.trim(),
+    socionics: document.getElementById("socionics").value.trim(),
+    neurotype: document.getElementById("neurotype").value.trim(),
+    classpect: document.getElementById("classpect").value.trim(),
+    ap: document.getElementById("ap").value.trim()
+  };
+
+  presets.push(preset);
+  savePresets();
+  renderPresets();
+}
+
+function renderPresets() {
+  const container = document.getElementById("presetsContainer");
+  container.innerHTML = "";
+
+  presets.forEach((preset, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = `Preset ${i+1}: ${preset.mbti || ''} ${preset.enneagram || ''} ${preset.socionics || ''} ${preset.neurotype || ''}`;
+    btn.onclick = () => loadPreset(preset);
+    container.appendChild(btn);
+  });
+}
+
+function loadPreset(preset) {
+  document.getElementById("mbti").value = preset.mbti;
+  document.getElementById("enneagram").value = preset.enneagram;
+  document.getElementById("socionics").value = preset.socionics;
+  document.getElementById("neurotype").value = preset.neurotype;
+  document.getElementById("classpect").value = preset.classpect;
+  document.getElementById("ap").value = preset.ap;
+  runSimilarityCheck(); // auto-run search
+}
+
+// render presets on page load
+document.addEventListener("DOMContentLoaded", renderPresets);
+
+		
 	</script>
 
 	</body>
 	</html>
+
 
 
 
