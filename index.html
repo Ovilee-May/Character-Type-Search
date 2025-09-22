@@ -472,12 +472,15 @@ function renderPresets() {
     del.style.border = "none";
     del.style.borderRadius = "4px";
     del.style.cursor = "pointer";
-    del.addEventListener("click", () => {
-      const updated = presets.filter((_, idx) => idx !== i);
-      localStorage.setItem("presets", JSON.stringify(updated));
-      renderPresets();
-    });
+	del.addEventListener("click", () => {
+	  presets = presets.filter((_, idx) => idx !== i);
+	  savePresets();
+	  renderPresets();
+	});
 
+
+
+	  
     wrapper.appendChild(btn);
     wrapper.appendChild(del);
     presetsDiv.appendChild(wrapper);
@@ -488,12 +491,13 @@ function renderPresets() {
     clearAll.textContent = "Clear All Presets";
     clearAll.style.marginTop = "10px";
     clearAll.style.background = "#faa";
-    clearAll.addEventListener("click", () => {
-      if (confirm("Delete ALL presets?")) {
-        localStorage.removeItem("presets");
-        renderPresets();
-      }
-    });
+	clearAll.addEventListener("click", () => {
+	  if (confirm("Delete ALL presets?")) {
+	    presets = [];
+	    savePresets();
+	    renderPresets();
+	  }
+	});
     presetsDiv.appendChild(clearAll);
   }
 }
@@ -520,6 +524,7 @@ document.addEventListener("DOMContentLoaded", renderPresets);
 
 	</body>
 	</html>
+
 
 
 
