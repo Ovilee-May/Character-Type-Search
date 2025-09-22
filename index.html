@@ -451,7 +451,8 @@ function renderPresets() {
   const presetsDiv = document.getElementById("presetsContainer");
   presetsDiv.innerHTML = "";
 
-  const presets = JSON.parse(localStorage.getItem("presets") || "[]");
+  // sync global with localStorage
+  presets = JSON.parse(localStorage.getItem("presets") || "[]");
 
   presets.forEach((preset, i) => {
     const wrapper = document.createElement("div");
@@ -472,9 +473,9 @@ function renderPresets() {
     del.style.borderRadius = "4px";
     del.style.cursor = "pointer";
     del.addEventListener("click", () => {
-      const updated = presets.filter((_, idx) => idx !== i);
-      localStorage.setItem("presets", JSON.stringify(updated));
-      renderPresets();
+      presets.splice(i, 1); // remove from global
+      savePresets();        // write to localStorage
+      renderPresets();      // refresh display
     });
 
     wrapper.appendChild(btn);
@@ -489,13 +490,15 @@ function renderPresets() {
     clearAll.style.background = "#faa";
     clearAll.addEventListener("click", () => {
       if (confirm("Delete ALL presets?")) {
-        localStorage.removeItem("presets");
-        renderPresets();
+        presets = [];                // clear global
+        savePresets();               // clear localStorage
+        renderPresets();             // update UI
       }
     });
     presetsDiv.appendChild(clearAll);
   }
 }
+
 
 
 
@@ -518,6 +521,7 @@ document.addEventListener("DOMContentLoaded", renderPresets);
 
 	</body>
 	</html>
+
 
 
 
