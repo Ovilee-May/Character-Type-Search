@@ -453,7 +453,7 @@ function renderPresets() {
 
   presets.forEach((preset, i) => {
     const btn = document.createElement("button");
-    btn.textContent = `Preset ${i+1}: ${preset.mbti || ''} ${preset.enneagram || ''} ${preset.socionics || ''} ${preset.neurotype || ''}`;
+    btn.textContent = `Preset ${i+1}: ${preset.mbti || ''} ${preset.enneagram || ''} ${preset.socionics || ''} ${preset.neurotype || ''} ${preset.fourletter  || ''}`;
     btn.onclick = () => loadPreset(preset);
     container.appendChild(btn);
   });
@@ -466,6 +466,7 @@ function loadPreset(preset) {
   document.getElementById("neurotype").value = preset.neurotype;
   document.getElementById("classpect").value = preset.classpect;
   document.getElementById("ap").value = preset.ap;
+  document.getElementById("fourletter").value = preset.fourletter;
   runSimilarityCheck(); // auto-run search
 }
 
@@ -477,6 +478,7 @@ document.addEventListener("DOMContentLoaded", renderPresets);
 
 	</body>
 	</html>
+
 
 
 
