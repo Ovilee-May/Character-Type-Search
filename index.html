@@ -448,7 +448,7 @@ function makePreset() {
 }
 
 function renderPresets() {
-  const presetsDiv = document.getElementById("presets");
+  const presetsDiv = document.getElementById("presetsContainer");
   presetsDiv.innerHTML = "";
 
   const presets = JSON.parse(localStorage.getItem("presets") || "[]");
@@ -463,7 +463,7 @@ function renderPresets() {
     const btn = document.createElement("button");
     btn.textContent =
       `Preset ${i+1}: MBTI=${preset.mbti || '-'} | 4L=${preset.fourletter || '-'} | Enneagram=${preset.enneagram || '-'} | Socionics=${preset.socionics || '-'} | Neurotype=${preset.neurotype || '-'}`;
-    btn.addEventListener("click", () => loadPreset(i));
+    btn.addEventListener("click", () => loadPreset(preset));
 
     const del = document.createElement("button");
     del.textContent = "❌";
@@ -498,6 +498,7 @@ function renderPresets() {
 }
 
 
+
 function loadPreset(preset) {
   document.getElementById("mbti").value = preset.mbti;
   document.getElementById("enneagram").value = preset.enneagram;
@@ -517,6 +518,7 @@ document.addEventListener("DOMContentLoaded", renderPresets);
 
 	</body>
 	</html>
+
 
 
 
