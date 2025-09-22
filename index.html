@@ -452,7 +452,7 @@ function renderPresets() {
   const presetsDiv = document.getElementById("presetsContainer");
   presetsDiv.innerHTML = "";
 
-  const presets = JSON.parse(localStorage.getItem("presets") || "[]");
+  presets = JSON.parse(localStorage.getItem("presets") || "[]");
 
   presets.forEach((preset, i) => {
     const wrapper = document.createElement("div");
@@ -520,6 +520,7 @@ document.addEventListener("DOMContentLoaded", renderPresets);
 
 	</body>
 	</html>
+
 
 
 
