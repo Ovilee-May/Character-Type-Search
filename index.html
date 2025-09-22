@@ -448,16 +448,55 @@ function makePreset() {
 }
 
 function renderPresets() {
-  const container = document.getElementById("presetsContainer");
-  container.innerHTML = "";
+  const presetsDiv = document.getElementById("presets");
+  presetsDiv.innerHTML = "";
+
+  const presets = JSON.parse(localStorage.getItem("presets") || "[]");
 
   presets.forEach((preset, i) => {
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.alignItems = "center";
+    wrapper.style.marginBottom = "6px";
+    wrapper.style.gap = "6px";
+
     const btn = document.createElement("button");
-    btn.textContent = `Preset ${i+1}: ${preset.mbti || ''} ${preset.enneagram || ''} ${preset.socionics || ''} ${preset.neurotype || ''} ${preset.fourletter  || ''}`;
-    btn.onclick = () => loadPreset(preset);
-    container.appendChild(btn);
+    btn.textContent =
+      `Preset ${i+1}: MBTI=${preset.mbti || '-'} | 4L=${preset.fourletter || '-'} | Enneagram=${preset.enneagram || '-'} | Socionics=${preset.socionics || '-'} | Neurotype=${preset.neurotype || '-'}`;
+    btn.addEventListener("click", () => loadPreset(i));
+
+    const del = document.createElement("button");
+    del.textContent = "❌";
+    del.style.background = "#f88";
+    del.style.border = "none";
+    del.style.borderRadius = "4px";
+    del.style.cursor = "pointer";
+    del.addEventListener("click", () => {
+      const updated = presets.filter((_, idx) => idx !== i);
+      localStorage.setItem("presets", JSON.stringify(updated));
+      renderPresets();
+    });
+
+    wrapper.appendChild(btn);
+    wrapper.appendChild(del);
+    presetsDiv.appendChild(wrapper);
   });
+
+  if (presets.length > 0) {
+    const clearAll = document.createElement("button");
+    clearAll.textContent = "Clear All Presets";
+    clearAll.style.marginTop = "10px";
+    clearAll.style.background = "#faa";
+    clearAll.addEventListener("click", () => {
+      if (confirm("Delete ALL presets?")) {
+        localStorage.removeItem("presets");
+        renderPresets();
+      }
+    });
+    presetsDiv.appendChild(clearAll);
+  }
 }
+
 
 function loadPreset(preset) {
   document.getElementById("mbti").value = preset.mbti;
@@ -478,6 +517,7 @@ document.addEventListener("DOMContentLoaded", renderPresets);
 
 	</body>
 	</html>
+
 
 
 
