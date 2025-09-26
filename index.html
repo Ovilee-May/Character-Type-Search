@@ -358,37 +358,25 @@
 		}
 
 		// OPS match: order-insensitive by comparing sets of parts (CS/BP == BP/CS)
-		function opsMatch(u, c) {
-			if (!u || !c) return 0;
-			const U = String(u).trim().toUpperCase();
-			const C = String(c).trim().toUpperCase();
-			if (!U || !C) return 0;
-			// exact normalized equality
-			if (U === C) return 1;
+	function opsMatch(userOps, charOps) {
+	  if (!userOps || !charOps) return 0;
+	
+	  const uParts = String(userOps).trim().toUpperCase().split("/");
+	  const cParts = String(charOps).trim().toUpperCase().split("/");
+	
+	  // Exact match (same order)
+	  if (uParts.join("/") === cParts.join("/")) return 1;
+	
+	  // Partial: reward correct animals in correct slots
+	  let score = 0;
+	  for (let i = 0; i < Math.min(uParts.length, cParts.length); i++) {
+	    if (uParts[i] === cParts[i]) score += 1;
+	  }
+	
+	  // Normalize by length
+	  return score / Math.max(uParts.length, cParts.length);
+	}
 
-			const uParts = U.split('/').map(p => p.trim()).filter(Boolean);
-			const cParts = C.split('/').map(p => p.trim()).filter(Boolean);
-
-			// treat as sets (order-insensitive)
-			const setU = new Set(uParts);
-			const setC = new Set(cParts);
-
-			// if sets equal (same elements but possibly different order)
-			if (uParts.length === cParts.length && uParts.every(p => setC.has(p))) return 1;
-
-			// compute intersection size
-			const shared = uParts.filter(x => setC.has(x)).length;
-			if (shared > 0) return shared / Math.max(uParts.length, cParts.length);
-
-			// fallback: substring similarity (e.g. user "CS" vs char "CS/PB")
-			// check if any part contains the other part
-			for (const up of uParts) {
-				for (const cp of cParts) {
-					if (cp.includes(up) || up.includes(cp)) return 0.5;
-				}
-			}
-			return 0;
-		}
 
 		function cepMatch(u, c) {
 			if (!u || !c) return 0;
