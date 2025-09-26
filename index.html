@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
-	<title>Character Similarity Finder — Genre Filter Fixed</title>
+	<title>Character Similarity Finder — Debuggable</title>
 	<style>
 		body {
 			font-family: system-ui, -apple-system, "Segoe UI", Roboto;
@@ -32,7 +32,7 @@
 
 		.results {
 			margin-top: 22px;
-			max-width: 800px;
+			max-width: 900px;
 		}
 
 		.character {
@@ -45,15 +45,24 @@
 			font-size: 13px;
 		}
 
+		.status {
+			margin-top: 10px;
+			color: #555;
+		}
+
+		.error {
+			color: #b00020;
+		}
+
 		.container {
 			display: flex;
-			gap: 60px;
+			gap: 40px;
 			align-items: flex-start;
 		}
 
 		.form-column {
 			flex: 1;
-			max-width: 500px;
+			max-width: 540px;
 		}
 
 		.results-column {
@@ -64,6 +73,7 @@
 <body>
 
 	<h1>Find Your Most Similar Characters</h1>
+	<div class="status" id="status">Loading characters...</div>
 
 	<div class="container">
 		<div class="form-column">
@@ -201,7 +211,7 @@
 				<select id="notesFilter"><option value="">All</option></select>
 
 				<br><br>
-				<button type="button" id="findBtn">Find Matches</button>
+				<button type="button" id="findBtn" disabled>Find Matches</button>
 
 				<h3>Scoring Toggles</h3>
 				<label><input type="checkbox" id="useMbti" checked> Use MBTI (w/ Jumpers)</label>
@@ -213,7 +223,6 @@
 				<label><input type="checkbox" id="useOps" checked> Use OPS Animals</label>
 				<label><input type="checkbox" id="useAp" checked> Use Attitudinal Psyche</label>
 				<label><input type="checkbox" id="useCep" checked> Use Enneagram Instinct</label>
-
 			</form>
 		</div>
 
@@ -223,18 +232,43 @@
 	</div>
 
 	<script>
+		document.getElementById('status').textContent = 'Loading characters...';
 		let characters = [];
 
-		fetch("characters.json?nocache=" + Date.now())
-			.then(res => res.json())
+		const findBtn = document.getElementById('findBtn');
+
+		function setStatus(msg, isError = false) {
+			const el = document.getElementById('status');
+			el.textContent = msg;
+			el.className = isError ? 'status error' : 'status';
+		}
+
+		// Fetch characters.json, enable button on success, show helpful errors
+		fetch('characters.json?nocache=' + Date.now())
+			.then(res => {
+				if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText);
+				return res.json();
+			})
 			.then(data => {
-				characters = data;
-				console.log("Characters loaded:", characters.length);
+				if (!Array.isArray(data)) {
+					console.warn('characters.json did not return an array', data);
+					setStatus('Loaded data but format is unexpected (not an array). Check console.', true);
+					// still try to continue by converting to array if possible
+					characters = Array.isArray(data) ? data : [];
+				} else {
+					characters = data;
+					setStatus('Characters loaded: ' + characters.length + '. Ready.');
+					console.log('Characters sample:', characters.slice(0, 3));
+				}
 				populateNotesFilter();
 				populateGenreFilter();
+				findBtn.disabled = false;
 			})
 			.catch(err => {
-				console.error("Error loading characters.json", err);
+				console.error('Error loading characters.json:', err);
+				setStatus('Error loading characters.json — open console for details.', true);
+				document.getElementById('results').innerHTML = '<p class="error">Error loading characters.json: ' + err.message + '</p>';
+				// keep button disabled
 			});
 
 		const neuroGrid = {
@@ -245,66 +279,51 @@
 		};
 
 		function populateGenreFilter() {
-			if (characters.length === 0) return;
+			if (!characters || characters.length === 0) return;
 			const genreSet = new Set();
 			characters.forEach(char => {
-				if (char && char.genre != null) {
-					const gStr = String(char.genre);
-					gStr.split('/').forEach(genre => {
-						const t = genre.trim();
-						if (t !== '') genreSet.add(t);
-					});
-				}
+				if (!char) return;
+				const g = char.genre || char.genres || char.category || '';
+				if (!g) return;
+				String(g).split('/').forEach(part => {
+					const t = part.trim();
+					if (t) genreSet.add(t);
+				});
 			});
-
-			const genreSelect = document.getElementById("genreFilter");
+			const genreSelect = document.getElementById('genreFilter');
 			genreSelect.innerHTML = '<option value="">All</option>';
 			Array.from(genreSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
-				.forEach(genre => {
-					const option = document.createElement("option");
-					option.value = genre;
-					option.textContent = genre;
-					genreSelect.appendChild(option);
-				});
+				.forEach(val => { const o = document.createElement('option'); o.value = val; o.textContent = val; genreSelect.appendChild(o); });
 		}
 
 		function populateNotesFilter() {
-			if (characters.length === 0) return;
+			if (!characters || characters.length === 0) return;
 			const notesSet = new Set();
 			characters.forEach(c => {
-				if (c && c.notes != null) {
-					if (Array.isArray(c.notes)) {
-						c.notes.forEach(item => { if (item != null) { const s = String(item).trim(); if (s !== '') notesSet.add(s); } });
-					} else {
-						String(c.notes).split('/').forEach(part => {
-							const t = part.trim();
-							if (t !== '') notesSet.add(t);
-						});
-					}
+				if (!c) return;
+				const notes = c.notes || c.show || c.series || '';
+				if (!notes) return;
+				if (Array.isArray(notes)) {
+					notes.forEach(n => { if (n) { const s = String(n).trim(); if (s) notesSet.add(s); } });
+				} else {
+					String(notes).split('/').forEach(part => { const t = part.trim(); if (t) notesSet.add(t); });
 				}
 			});
-
-			const select = document.getElementById("notesFilter");
+			const select = document.getElementById('notesFilter');
 			select.innerHTML = '<option value="">All</option>';
 			Array.from(notesSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
-				.forEach(n => {
-					const opt = document.createElement("option");
-					opt.value = n;
-					opt.textContent = n;
-					select.appendChild(opt);
-				});
+				.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; select.appendChild(o); });
 		}
 
-		// parse MBTI function pair written as "Ni/Fe" OR old "NiFe" (returns array)
+		// Accepts "Ni/Fe" or "NiFe" or "Ni Fe"
 		function parsePair(raw) {
 			if (!raw) return [];
 			const s = String(raw).trim();
-			if (s.includes('/')) {
-				return s.split('/').map(x => x.trim());
-			}
-			// fallback: split into 2-letter parts if possible
+			if (s.includes('/')) return s.split('/').map(x => x.trim());
+			if (s.includes(' ')) return s.split(/\s+/).map(x => x.trim());
 			const m = s.match(/.{1,2}/g);
-			return m ? m.map(x => x.trim()) : [s];
+			if (m && m.length >= 2) return m.map(x => x.trim());
+			return [s];
 		}
 
 		function mbtiPairScore(a, b) {
@@ -325,21 +344,18 @@
 			const uParts = U.split('/').map(x => x.trim()).filter(Boolean);
 			const cParts = C.split('/').map(x => x.trim()).filter(Boolean);
 			const shared = uParts.filter(x => cParts.includes(x));
-			if (shared.length === 0) {
-				// if one contains the other as substring (e.g. "CS" vs "CS/PB")
-				if (cParts.some(p => p.includes(U)) || uParts.some(p => p.includes(C))) return 0.5;
-				return 0;
-			}
-			return shared.length / Math.max(uParts.length, cParts.length);
+			if (shared.length) return shared.length / Math.max(uParts.length, cParts.length);
+			// try substring fallback, e.g. "CS" in "CS/PB"
+			if (cParts.some(p => p.includes(U)) || uParts.some(p => p.includes(C))) return 0.5;
+			return 0;
 		}
 
-		function cepMatch(userCep, charCep) {
-			if (!userCep || !charCep) return 0;
-			const u = String(userCep).trim().toUpperCase();
-			const c = String(charCep).trim().toUpperCase();
-			if (u === c) return 1;
-			// check third character (1,2,3 etc.) if present
-			if (u.length >= 3 && c.length >= 3 && u[2] === c[2]) return 0.5;
+		function cepMatch(u, c) {
+			if (!u || !c) return 0;
+			const U = String(u).trim().toUpperCase();
+			const C = String(c).trim().toUpperCase();
+			if (U === C) return 1;
+			if (U.length >= 3 && C.length >= 3 && U[2] === C[2]) return 0.5;
 			return 0;
 		}
 
@@ -353,140 +369,155 @@
 
 		function textMatch(a, b) {
 			if (!a || !b) return 0;
-			return a.trim().toLowerCase() === b.trim().toLowerCase() ? 1 : 0;
+			return String(a).trim().toLowerCase() === String(b).trim().toLowerCase() ? 1 : 0;
 		}
 
 		function fourLetterMatch(u, c) {
 			if (!u || !c) return 0;
-			const U = u.trim().toUpperCase();
-			const C = c.trim().toUpperCase();
+			const U = String(u).trim().toUpperCase(), C = String(c).trim().toUpperCase();
 			if (U === C) return 1;
-			let matches = 0;
-			for (let i = 0; i < 4; i++) {
-				if (U[i] === C[i]) matches++;
-			}
-			return matches / 4;
+			let m = 0;
+			for (let i = 0; i < 4; i++) { if (U[i] === C[i]) m++; }
+			return m / 4;
 		}
 
-		function enneagramMatch(userInput, charEnneagram) {
-			if (!userInput || !charEnneagram) return 0;
-			const uMatch = String(userInput).match(/\d/);
-			const cMatch = String(charEnneagram).match(/\d/);
-			if (!uMatch || !cMatch) return 0;
-			return uMatch[0] === cMatch[0] ? 1 : 0;
+		function enneagramMatch(u, c) {
+			if (!u || !c) return 0;
+			const um = String(u).match(/\d/), cm = String(c).match(/\d/);
+			if (!um || !cm) return 0;
+			return um[0] === cm[0] ? 1 : 0;
 		}
 
 		function computeScore(user, char) {
+			// allow different property names in character objects
+			const get = (ch, ...keys) => {
+				for (const k of keys) {
+					if (!k) continue;
+					if (k in ch && ch[k] != null) return ch[k];
+				}
+				return '';
+			};
+
+			const charMbti = get(char, 'mbti', 'function', 'functions', 'func', 'fn');
+			const charFour = get(char, 'fourletter', 'four', 'mbti4');
+			const charEnn = get(char, 'enneagram', 'ennea');
+			const charSoc = get(char, 'socionics', 'soc');
+			const charNeuro = get(char, 'neurotype', 'neuro');
+			const charClass = get(char, 'classpect', 'class');
+			const charAp = get(char, 'ap', 'attitudinal', 'attitude');
+			const charCep = get(char, 'cep', 'instinct');
+			const charOps = get(char, 'ops', 'animals', 'ops_animals', 'animal');
+
 			const weights = {
-				mbti: 0.30,
-				fourletter: 0.20,
-				enneagram: 0.12,
-				socionics: 0.08,
-				neurotype: 0.10,
-				classpect: 0.05,
-				ap: 0.05,
-				cep: 0.05,
-				ops: 0.05
+				mbti: 0.30, fourletter: 0.20, enneagram: 0.12, socionics: 0.08,
+				neurotype: 0.10, classpect: 0.05, ap: 0.05, cep: 0.05, ops: 0.05
 			};
 
 			const active = [];
-			if (document.getElementById("useMbti").checked) active.push("mbti");
-			if (document.getElementById("use4Letter").checked) active.push("fourletter");
-			if (document.getElementById("useEnneagram").checked) active.push("enneagram");
-			if (document.getElementById("useSocionics").checked) active.push("socionics");
-			if (document.getElementById("useNeurotype").checked) active.push("neurotype");
-			if (document.getElementById("useClasspect").checked) active.push("classpect");
-			if (document.getElementById("useAp").checked) active.push("ap");
-			if (document.getElementById("useCep").checked) active.push("cep");
-			if (document.getElementById("useOps").checked) active.push("ops");
+			if (document.getElementById('useMbti').checked) active.push('mbti');
+			if (document.getElementById('use4Letter').checked) active.push('fourletter');
+			if (document.getElementById('useEnneagram').checked) active.push('enneagram');
+			if (document.getElementById('useSocionics').checked) active.push('socionics');
+			if (document.getElementById('useNeurotype').checked) active.push('neurotype');
+			if (document.getElementById('useClasspect').checked) active.push('classpect');
+			if (document.getElementById('useAp').checked) active.push('ap');
+			if (document.getElementById('useCep').checked) active.push('cep');
+			if (document.getElementById('useOps').checked) active.push('ops');
 
 			if (active.length === 0) return 0;
-			const totalWeight = active.reduce((sum, key) => sum + (weights[key] || 0), 0) || 1;
-			const w = key => (weights[key] || 0) / totalWeight;
+			const total = active.reduce((s, k) => s + (weights[k] || 0), 0) || 1;
+			const w = k => (weights[k] || 0) / total;
 
 			let score = 0;
-			if (active.includes("mbti")) score += mbtiPairScore(user.mbti, char.mbti) * w("mbti");
-			if (active.includes("fourletter")) score += fourLetterMatch(user.fourletter, char.fourletter) * w("fourletter");
-			if (active.includes("enneagram")) score += enneagramMatch(user.enneagram, char.enneagram) * w("enneagram");
-			if (active.includes("socionics")) score += textMatch(user.socionics, char.socionics) * w("socionics");
-			if (active.includes("neurotype")) score += neurotypeScore(user.neurotype, char.neurotype) * w("neurotype");
-			if (active.includes("classpect")) score += textMatch(user.classpect, char.classpect) * w("classpect");
-			if (active.includes("ap")) score += textMatch(user.ap, char.ap) * w("ap");
-			if (active.includes("cep")) score += cepMatch(user.cep, char.cep) * w("cep");
-			if (active.includes("ops")) score += opsMatch(user.ops, char.ops || char.animals || '') * w("ops");
+			if (active.includes('mbti')) score += mbtiPairScore(user.mbti, charMbti) * w('mbti');
+			if (active.includes('fourletter')) score += fourLetterMatch(user.fourletter, charFour) * w('fourletter');
+			if (active.includes('enneagram')) score += enneagramMatch(user.enneagram, charEnn) * w('enneagram');
+			if (active.includes('socionics')) score += textMatch(user.socionics, charSoc) * w('socionics');
+			if (active.includes('neurotype')) score += neurotypeScore(user.neurotype, charNeuro) * w('neurotype');
+			if (active.includes('classpect')) score += textMatch(user.classpect, charClass) * w('classpect');
+			if (active.includes('ap')) score += textMatch(user.ap, charAp) * w('ap');
+			if (active.includes('cep')) score += cepMatch(user.cep, charCep) * w('cep');
+			if (active.includes('ops')) score += opsMatch(user.ops, charOps) * w('ops');
 
 			return score;
 		}
 
 		function runSimilarityCheck() {
-			if (characters.length === 0) {
-				document.getElementById("results").innerHTML = "<h2>No Data</h2><p>No character data loaded. Please ensure characters.json exists and is accessible.</p>";
+			if (!characters || characters.length === 0) {
+				document.getElementById('results').innerHTML = '<p class="error">No character data loaded.</p>';
 				return;
 			}
 
 			const user = {
-				mbti: document.getElementById("mbti").value || '',
-				enneagram: document.getElementById("enneagram").value || '',
-				socionics: document.getElementById("socionics").value || '',
-				neurotype: document.getElementById("neurotype").value || '',
-				classpect: document.getElementById("classpect").value || '',
-				ap: document.getElementById("ap").value || '',
-				cep: document.getElementById("cep").value || '',
-				fourletter: document.getElementById("fourletter").value || '',
-				ops: document.getElementById("ops").value || ''
+				mbti: document.getElementById('mbti').value || '',
+				enneagram: document.getElementById('enneagram').value || '',
+				socionics: document.getElementById('socionics').value || '',
+				neurotype: document.getElementById('neurotype').value || '',
+				classpect: document.getElementById('classpect').value || '',
+				ap: document.getElementById('ap').value || '',
+				cep: document.getElementById('cep').value || '',
+				fourletter: document.getElementById('fourletter').value || '',
+				ops: document.getElementById('ops').value || ''
 			};
 
-			const genreFilterRaw = document.getElementById("genreFilter").value;
+			const genreFilterRaw = document.getElementById('genreFilter').value;
 			const genreFilter = genreFilterRaw ? String(genreFilterRaw).trim().toLowerCase() : '';
-			const selectedNotesRaw = document.getElementById("notesFilter").value;
+			const selectedNotesRaw = document.getElementById('notesFilter').value;
 			const selectedNotes = selectedNotesRaw ? String(selectedNotesRaw).trim().toLowerCase() : '';
 
-			let filteredChars = characters.slice();
+			let filtered = characters.slice();
 
-			if (genreFilter !== '') {
-				filteredChars = filteredChars.filter(c => {
-					if (!c || c.genre == null) return false;
-					const gStr = String(c.genre).toLowerCase();
-					return gStr.split("/").map(s => s.trim()).some(src => src === genreFilter);
+			if (genreFilter) {
+				filtered = filtered.filter(c => {
+					const g = c.genre || c.genres || '';
+					if (!g) return false;
+					return String(g).toLowerCase().split('/').map(x => x.trim()).some(x => x === genreFilter);
 				});
 			}
 
-			if (selectedNotes !== '') {
-				filteredChars = filteredChars.filter(c => {
-					if (!c || c.notes == null) return false;
-					let noteOptions = [];
-					if (Array.isArray(c.notes)) {
-						noteOptions = c.notes.map(x => String(x).trim().toLowerCase()).filter(x => x !== '');
-					} else {
-						noteOptions = String(c.notes).split("/").map(x => x.trim().toLowerCase()).filter(x => x !== '');
-					}
-					return noteOptions.includes(selectedNotes);
+			if (selectedNotes) {
+				filtered = filtered.filter(c => {
+					const notes = c.notes || c.show || c.series || '';
+					if (!notes) return false;
+					const arr = Array.isArray(notes) ? notes : String(notes).split('/');
+					return arr.map(x => String(x).trim().toLowerCase()).includes(selectedNotes);
 				});
 			}
 
-			if (filteredChars.length === 0) {
-				document.getElementById("results").innerHTML = "<h2>No Results</h2><p>No characters found matching the selected filters.</p>";
+			if (filtered.length === 0) {
+				document.getElementById('results').innerHTML = '<h2>No Results</h2><p>No characters found matching the selected filters.</p>';
 				return;
 			}
 
-			const scored = filteredChars.map(c => ({ ...c, similarity: computeScore(user, c) }));
+			const scored = filtered.map(c => ({ ...c, similarity: computeScore(user, c) }));
 			scored.sort((a, b) => b.similarity - a.similarity);
-			const top = scored.slice(0, 25);
 
-			document.getElementById("results").innerHTML = "<h2>Top Matches</h2>" + top.map(c => `
+			const top = scored.slice(0, 25);
+			document.getElementById('results').innerHTML = '<h2>Top Matches</h2>' + top.map(c => `
 		<div class="character">
-		  <strong>${c.name || 'Unnamed'}</strong> (${c.notes || 'N/A'}) — ${Math.round((c.similarity || 0) * 100)}%<br>
-		  <span class="muted"> 4letter MBTI: ${c.fourletter || 'N/A'}, Function MBTI: ${c.mbti || 'N/A'}, Enneagram: ${c.enneagram || 'N/A'}, Instinct: ${c.cep || 'N/A'}, Socionics: ${c.socionics || 'N/A'},
-		  Neurotype: ${c.neurotype || 'N/A'}, OPS: ${c.ops || c.animals || 'N/A'}, Genre: ${c.genre || 'N/A'}</span>
+		  <strong>${c.name || 'Unnamed'}</strong> (${c.notes || c.show || 'N/A'}) — ${Math.round((c.similarity || 0) * 100)}%<br>
+		  <span class="muted"> 4L: ${c.fourletter || c.mbti4 || 'N/A'}, Func: ${c.mbti || c.function || 'N/A'}, Enneagram: ${c.enneagram || 'N/A'}, Instinct: ${c.cep || 'N/A'}, Socionics: ${c.socionics || 'N/A'}, OPS: ${c.ops || c.animals || 'N/A'}, Genre: ${c.genre || 'N/A'}</span>
 		</div>
-	  `).join("");
+	  `).join('');
 		}
 
-		document.getElementById("findBtn").addEventListener("click", runSimilarityCheck);
+		// Attach event listener (safe to do immediately)
+		findBtn.addEventListener('click', function () {
+			try {
+				runSimilarityCheck();
+			} catch (err) {
+				console.error('runSimilarityCheck error:', err);
+				document.getElementById('results').innerHTML = '<p class="error">Error running search — see console for details.</p>';
+			}
+		});
 
-		// Ensure filters are available if characters loaded after DOM ready
-		document.addEventListener('DOMContentLoaded', function () {
-			if (characters.length > 0) {
+		// Helpful instructions for debugging
+		console.log("If nothing happens: 1) open DevTools Console, 2) check network tab for characters.json response code, 3) paste console errors here.");
+
+		// also enable filters if characters already loaded after DOM ready (edge case)
+		document.addEventListener('DOMContentLoaded', () => {
+			if (characters && characters.length > 0) {
+				findBtn.disabled = false;
 				populateGenreFilter();
 				populateNotesFilter();
 			}
