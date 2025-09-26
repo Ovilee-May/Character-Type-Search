@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
-	<title>Character Similarity Finder — Debuggable</title>
+	<title>Character Similarity Finder — Debuggable + Presets</title>
 	<style>
 		body {
 			font-family: system-ui, -apple-system, "Segoe UI", Roboto;
@@ -68,6 +68,21 @@
 		.results-column {
 			flex: 2;
 		}
+
+		.presets {
+			margin-top: 12px;
+		}
+
+		.preset-row {
+			display: flex;
+			gap: 8px;
+			align-items: center;
+			margin-bottom: 6px;
+		}
+
+			.preset-row button {
+				margin: 0;
+			}
 	</style>
 </head>
 <body>
@@ -210,8 +225,11 @@
 				<label>Show/Series</label>
 				<select id="notesFilter"><option value="">All</option></select>
 
-				<br><br>
+				<br>
 				<button type="button" id="findBtn" disabled>Find Matches</button>
+				<button type="button" id="savePresetBtn">Save Preset</button>
+
+				<div class="presets" id="presetsContainer"></div>
 
 				<h3>Scoring Toggles</h3>
 				<label><input type="checkbox" id="useMbti" checked> Use MBTI (w/ Jumpers)</label>
@@ -232,18 +250,21 @@
 	</div>
 
 	<script>
-		document.getElementById('status').textContent = 'Loading characters...';
-		let characters = [];
-
+		// status & data
+		const statusEl = document.getElementById('status');
+		const resultsEl = document.getElementById('results');
 		const findBtn = document.getElementById('findBtn');
+		const savePresetBtn = document.getElementById('savePresetBtn');
+		const presetsContainer = document.getElementById('presetsContainer');
 
 		function setStatus(msg, isError = false) {
-			const el = document.getElementById('status');
-			el.textContent = msg;
-			el.className = isError ? 'status error' : 'status';
+			statusEl.textContent = msg;
+			statusEl.className = isError ? 'status error' : 'status';
 		}
 
-		// Fetch characters.json, enable button on success, show helpful errors
+		let characters = [];
+
+		// load characters
 		fetch('characters.json?nocache=' + Date.now())
 			.then(res => {
 				if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText);
@@ -251,24 +272,23 @@
 			})
 			.then(data => {
 				if (!Array.isArray(data)) {
-					console.warn('characters.json did not return an array', data);
-					setStatus('Loaded data but format is unexpected (not an array). Check console.', true);
-					// still try to continue by converting to array if possible
+					console.warn('characters.json returned non-array, continuing with []');
 					characters = Array.isArray(data) ? data : [];
+					setStatus('Loaded data but format unexpected; continuing.', true);
 				} else {
 					characters = data;
 					setStatus('Characters loaded: ' + characters.length + '. Ready.');
-					console.log('Characters sample:', characters.slice(0, 3));
 				}
 				populateNotesFilter();
 				populateGenreFilter();
 				findBtn.disabled = false;
+				renderPresets(); // show saved presets
 			})
 			.catch(err => {
 				console.error('Error loading characters.json:', err);
 				setStatus('Error loading characters.json — open console for details.', true);
-				document.getElementById('results').innerHTML = '<p class="error">Error loading characters.json: ' + err.message + '</p>';
-				// keep button disabled
+				resultsEl.innerHTML = '<p class="error">Error loading characters.json: ' + (err.message || err) + '</p>';
+				findBtn.disabled = true;
 			});
 
 		const neuroGrid = {
@@ -283,52 +303,53 @@
 			const genreSet = new Set();
 			characters.forEach(char => {
 				if (!char) return;
-				const g = char.genre || char.genres || char.category || '';
-				if (!g) return;
-				String(g).split('/').forEach(part => {
+				const raw = char.genre || char.genres || char.category || '';
+				if (!raw) return;
+				String(raw).split('/').forEach(part => {
 					const t = part.trim();
 					if (t) genreSet.add(t);
 				});
 			});
-			const genreSelect = document.getElementById('genreFilter');
-			genreSelect.innerHTML = '<option value="">All</option>';
+			const sel = document.getElementById('genreFilter');
+			sel.innerHTML = '<option value="">All</option>';
 			Array.from(genreSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
-				.forEach(val => { const o = document.createElement('option'); o.value = val; o.textContent = val; genreSelect.appendChild(o); });
+				.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
 		}
 
 		function populateNotesFilter() {
 			if (!characters || characters.length === 0) return;
-			const notesSet = new Set();
+			const set = new Set();
 			characters.forEach(c => {
 				if (!c) return;
 				const notes = c.notes || c.show || c.series || '';
 				if (!notes) return;
 				if (Array.isArray(notes)) {
-					notes.forEach(n => { if (n) { const s = String(n).trim(); if (s) notesSet.add(s); } });
+					notes.forEach(n => { if (n) { const s = String(n).trim(); if (s) set.add(s); } });
 				} else {
-					String(notes).split('/').forEach(part => { const t = part.trim(); if (t) notesSet.add(t); });
+					String(notes).split('/').forEach(part => { const t = part.trim(); if (t) set.add(t); });
 				}
 			});
-			const select = document.getElementById('notesFilter');
-			select.innerHTML = '<option value="">All</option>';
-			Array.from(notesSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
-				.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; select.appendChild(o); });
+			const sel = document.getElementById('notesFilter');
+			sel.innerHTML = '<option value="">All</option>';
+			Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+				.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
 		}
 
-		// Accepts "Ni/Fe" or "NiFe" or "Ni Fe"
+		// parse function pair but keep robust
 		function parsePair(raw) {
 			if (!raw) return [];
 			const s = String(raw).trim();
-			if (s.includes('/')) return s.split('/').map(x => x.trim());
-			if (s.includes(' ')) return s.split(/\s+/).map(x => x.trim());
+			if (!s) return [];
+			if (s.includes('/')) return s.split('/').map(x => x.trim()).filter(Boolean);
+			if (s.includes(' ')) return s.split(/\s+/).map(x => x.trim()).filter(Boolean);
+			// fallback split into every 2 characters (NiTe -> ['Ni','Te'])
 			const m = s.match(/.{1,2}/g);
-			if (m && m.length >= 2) return m.map(x => x.trim());
-			return [s];
+			return m ? m.map(x => x.trim()) : [s];
 		}
 
 		function mbtiPairScore(a, b) {
 			const A = parsePair(a), B = parsePair(b);
-			if (A.length === 0 || B.length === 0) return 0;
+			if (!A.length || !B.length) return 0;
 			if (A[0] === B[0] && A[1] === B[1]) return 1;
 			if (A[0] === B[0]) return 0.6;
 			if (A[1] === B[1]) return 0.4;
@@ -336,17 +357,36 @@
 			return 0;
 		}
 
+		// OPS match: order-insensitive by comparing sets of parts (CS/BP == BP/CS)
 		function opsMatch(u, c) {
 			if (!u || !c) return 0;
 			const U = String(u).trim().toUpperCase();
 			const C = String(c).trim().toUpperCase();
+			if (!U || !C) return 0;
+			// exact normalized equality
 			if (U === C) return 1;
-			const uParts = U.split('/').map(x => x.trim()).filter(Boolean);
-			const cParts = C.split('/').map(x => x.trim()).filter(Boolean);
-			const shared = uParts.filter(x => cParts.includes(x));
-			if (shared.length) return shared.length / Math.max(uParts.length, cParts.length);
-			// try substring fallback, e.g. "CS" in "CS/PB"
-			if (cParts.some(p => p.includes(U)) || uParts.some(p => p.includes(C))) return 0.5;
+
+			const uParts = U.split('/').map(p => p.trim()).filter(Boolean);
+			const cParts = C.split('/').map(p => p.trim()).filter(Boolean);
+
+			// treat as sets (order-insensitive)
+			const setU = new Set(uParts);
+			const setC = new Set(cParts);
+
+			// if sets equal (same elements but possibly different order)
+			if (uParts.length === cParts.length && uParts.every(p => setC.has(p))) return 1;
+
+			// compute intersection size
+			const shared = uParts.filter(x => setC.has(x)).length;
+			if (shared > 0) return shared / Math.max(uParts.length, cParts.length);
+
+			// fallback: substring similarity (e.g. user "CS" vs char "CS/PB")
+			// check if any part contains the other part
+			for (const up of uParts) {
+				for (const cp of cParts) {
+					if (cp.includes(up) || up.includes(cp)) return 0.5;
+				}
+			}
 			return 0;
 		}
 
@@ -361,7 +401,7 @@
 
 		function neurotypeScore(uT, cT) {
 			if (!uT || !cT) return 0;
-			const u = neuroGrid[uT.trim()], c = neuroGrid[cT.trim()];
+			const u = neuroGrid[String(uT).trim()], c = neuroGrid[String(cT).trim()];
 			if (!u || !c) return 0;
 			const dx = u[0] - c[0], dy = u[1] - c[1];
 			return 1 - Math.sqrt(dx * dx + dy * dy) / Math.sqrt(18);
@@ -377,7 +417,7 @@
 			const U = String(u).trim().toUpperCase(), C = String(c).trim().toUpperCase();
 			if (U === C) return 1;
 			let m = 0;
-			for (let i = 0; i < 4; i++) { if (U[i] === C[i]) m++; }
+			for (let i = 0; i < 4; i++) if (U[i] === C[i]) m++;
 			return m / 4;
 		}
 
@@ -388,8 +428,8 @@
 			return um[0] === cm[0] ? 1 : 0;
 		}
 
+		// computeScore uses flexible property names for characters
 		function computeScore(user, char) {
-			// allow different property names in character objects
 			const get = (ch, ...keys) => {
 				for (const k of keys) {
 					if (!k) continue;
@@ -444,20 +484,19 @@
 
 		function runSimilarityCheck() {
 			if (!characters || characters.length === 0) {
-				document.getElementById('results').innerHTML = '<p class="error">No character data loaded.</p>';
+				resultsEl.innerHTML = '<p class="error">No character data loaded.</p>';
 				return;
 			}
-
 			const user = {
-				mbti: document.getElementById('mbti').value || '',
-				enneagram: document.getElementById('enneagram').value || '',
-				socionics: document.getElementById('socionics').value || '',
-				neurotype: document.getElementById('neurotype').value || '',
-				classpect: document.getElementById('classpect').value || '',
-				ap: document.getElementById('ap').value || '',
-				cep: document.getElementById('cep').value || '',
-				fourletter: document.getElementById('fourletter').value || '',
-				ops: document.getElementById('ops').value || ''
+				mbti: (document.getElementById('mbti').value || '').trim(),
+				enneagram: (document.getElementById('enneagram').value || '').trim(),
+				socionics: (document.getElementById('socionics').value || '').trim(),
+				neurotype: (document.getElementById('neurotype').value || '').trim(),
+				classpect: (document.getElementById('classpect').value || '').trim(),
+				ap: (document.getElementById('ap').value || '').trim(),
+				cep: (document.getElementById('cep').value || '').trim(),
+				fourletter: (document.getElementById('fourletter').value || '').trim(),
+				ops: (document.getElementById('ops').value || '').trim()
 			};
 
 			const genreFilterRaw = document.getElementById('genreFilter').value;
@@ -469,7 +508,7 @@
 
 			if (genreFilter) {
 				filtered = filtered.filter(c => {
-					const g = c.genre || c.genres || '';
+					const g = c.genre || c.genres || c.category || '';
 					if (!g) return false;
 					return String(g).toLowerCase().split('/').map(x => x.trim()).some(x => x === genreFilter);
 				});
@@ -485,43 +524,122 @@
 			}
 
 			if (filtered.length === 0) {
-				document.getElementById('results').innerHTML = '<h2>No Results</h2><p>No characters found matching the selected filters.</p>';
+				resultsEl.innerHTML = '<h2>No Results</h2><p>No characters found matching the selected filters.</p>';
 				return;
 			}
 
 			const scored = filtered.map(c => ({ ...c, similarity: computeScore(user, c) }));
 			scored.sort((a, b) => b.similarity - a.similarity);
-
 			const top = scored.slice(0, 25);
-			document.getElementById('results').innerHTML = '<h2>Top Matches</h2>' + top.map(c => `
-		<div class="character">
-		  <strong>${c.name || 'Unnamed'}</strong> (${c.notes || c.show || 'N/A'}) — ${Math.round((c.similarity || 0) * 100)}%<br>
-		  <span class="muted"> 4L: ${c.fourletter || c.mbti4 || 'N/A'}, Func: ${c.mbti || c.function || 'N/A'}, Enneagram: ${c.enneagram || 'N/A'}, Instinct: ${c.cep || 'N/A'}, Socionics: ${c.socionics || 'N/A'}, OPS: ${c.ops || c.animals || 'N/A'}, Genre: ${c.genre || 'N/A'}</span>
-		</div>
-	  `).join('');
+			resultsEl.innerHTML = '<h2>Top Matches</h2>' + top.map(c => `
+					<div class="character">
+						<strong>${c.name || 'Unnamed'}</strong> (${c.notes || c.show || 'N/A'}) — ${Math.round((c.similarity || 0) * 100)}%<br>
+						<span class="muted">4L: ${c.fourletter || c.mbti4 || 'N/A'}, Func: ${c.mbti || c.function || 'N/A'}, Enneagram: ${c.enneagram || 'N/A'}, Instinct: ${c.cep || 'N/A'}, Socionics: ${c.socionics || 'N/A'}, OPS: ${c.ops || c.animals || 'N/A'}, Genre: ${c.genre || 'N/A'}</span>
+					</div>
+				`).join('');
 		}
 
-		// Attach event listener (safe to do immediately)
-		findBtn.addEventListener('click', function () {
+		// --- PRESETS: save/load/delete ---
+		const PRESET_KEY = 'character_presets_v1';
+
+		function loadPresetsFromStorage() {
+			try {
+				return JSON.parse(localStorage.getItem(PRESET_KEY) || '[]');
+			} catch (e) {
+				return [];
+			}
+		}
+
+		function savePresetsToStorage(arr) {
+			localStorage.setItem(PRESET_KEY, JSON.stringify(arr || []));
+		}
+
+		function renderPresets() {
+			const arr = loadPresetsFromStorage();
+			presetsContainer.innerHTML = '';
+			if (!arr.length) {
+				presetsContainer.innerHTML = '<div class="muted">No presets saved.</div>';
+				return;
+			}
+			arr.forEach((p, i) => {
+				const row = document.createElement('div');
+				row.className = 'preset-row';
+				const btn = document.createElement('button');
+				btn.textContent = `Preset ${i + 1}: ${p.mbti || '-'} | ${p.fourletter || '-'} | ${p.enneagram || '-'} | ${p.ops || '-'}`;
+				btn.addEventListener('click', () => loadPreset(p));
+				const del = document.createElement('button');
+				del.textContent = '❌';
+				del.style.background = '#f88';
+				del.style.border = 'none';
+				del.style.borderRadius = '4px';
+				del.addEventListener('click', () => {
+					const updated = loadPresetsFromStorage().filter((_, idx) => idx !== i);
+					savePresetsToStorage(updated);
+					renderPresets();
+				});
+				row.appendChild(btn);
+				row.appendChild(del);
+				presetsContainer.appendChild(row);
+			});
+			// add clear all
+			const clearAll = document.createElement('button');
+			clearAll.textContent = 'Clear All Presets';
+			clearAll.style.marginTop = '8px';
+			clearAll.style.background = '#faa';
+			clearAll.addEventListener('click', () => {
+				if (confirm('Delete ALL presets?')) {
+					localStorage.removeItem(PRESET_KEY);
+					renderPresets();
+				}
+			});
+			presetsContainer.appendChild(clearAll);
+		}
+
+		function makePresetFromForm() {
+			const preset = {
+				mbti: (document.getElementById('mbti').value || '').trim(),
+				fourletter: (document.getElementById('fourletter').value || '').trim(),
+				enneagram: (document.getElementById('enneagram').value || '').trim(),
+				socionics: (document.getElementById('socionics').value || '').trim(),
+				neurotype: (document.getElementById('neurotype').value || '').trim(),
+				classpect: (document.getElementById('classpect').value || '').trim(),
+				ap: (document.getElementById('ap').value || '').trim(),
+				cep: (document.getElementById('cep').value || '').trim(),
+				ops: (document.getElementById('ops').value || '').trim()
+			};
+			const arr = loadPresetsFromStorage();
+			arr.push(preset);
+			savePresetsToStorage(arr);
+			renderPresets();
+		}
+
+		function loadPreset(preset) {
+			document.getElementById('mbti').value = preset.mbti || '';
+			document.getElementById('fourletter').value = preset.fourletter || '';
+			document.getElementById('enneagram').value = preset.enneagram || '';
+			document.getElementById('socionics').value = preset.socionics || '';
+			document.getElementById('neurotype').value = preset.neurotype || '';
+			document.getElementById('classpect').value = preset.classpect || '';
+			document.getElementById('ap').value = preset.ap || '';
+			document.getElementById('cep').value = preset.cep || '';
+			document.getElementById('ops').value = preset.ops || '';
+			// auto-run search after loading
+			try { runSimilarityCheck(); } catch (e) { console.error(e); }
+		}
+
+		// Attach event listeners
+		findBtn.addEventListener('click', () => {
 			try {
 				runSimilarityCheck();
 			} catch (err) {
 				console.error('runSimilarityCheck error:', err);
-				document.getElementById('results').innerHTML = '<p class="error">Error running search — see console for details.</p>';
+				resultsEl.innerHTML = '<p class="error">Error running search — see console for details.</p>';
 			}
 		});
+		savePresetBtn.addEventListener('click', makePresetFromForm);
 
-		// Helpful instructions for debugging
-		console.log("If nothing happens: 1) open DevTools Console, 2) check network tab for characters.json response code, 3) paste console errors here.");
-
-		// also enable filters if characters already loaded after DOM ready (edge case)
-		document.addEventListener('DOMContentLoaded', () => {
-			if (characters && characters.length > 0) {
-				findBtn.disabled = false;
-				populateGenreFilter();
-				populateNotesFilter();
-			}
-		});
+		// Render presets on DOM ready (even before characters loaded)
+		document.addEventListener('DOMContentLoaded', renderPresets);
 	</script>
 
 </body>
