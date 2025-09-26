@@ -542,46 +542,47 @@
 			localStorage.setItem(PRESET_KEY, JSON.stringify(arr || []));
 		}
 
-		function renderPresets() {
-			const arr = loadPresetsFromStorage();
-			presetsContainer.innerHTML = '';
-			if (!arr.length) {
-				presetsContainer.innerHTML = '<div class="muted">No presets saved.</div>';
-				return;
-			}
-			arr.forEach((p, i) => {
-				const row = document.createElement('div');
-				row.className = 'preset-row';
-				const btn = document.createElement('button');
-				btn.textContent = `Preset ${i + 1}: ${p.mbti || '-'} | ${p.fourletter || '-'} | ${p.enneagram || '-'} | ${p.cep || '-'} | ${p.ops || '-'} | ${p.classpect || '-'}`;
-				btn.addEventListener('click', () => loadPreset(p));
-				const del = document.createElement('button');
-				del.textContent = '❌';
-				del.style.background = '#f88';
-				del.style.border = 'none';
-				del.style.borderRadius = '4px';
-				del.addEventListener('click', () => {
-					const updated = loadPresetsFromStorage().filter((_, idx) => idx !== i);
-					savePresetsToStorage(updated);
-					renderPresets();
-				});
-				row.appendChild(btn);
-				row.appendChild(del);
-				presetsContainer.appendChild(row);
-			});
-			// add clear all
-			const clearAll = document.createElement('button');
-			clearAll.textContent = 'Clear All Presets';
-			clearAll.style.marginTop = '8px';
-			clearAll.style.background = '#faa';
-			clearAll.addEventListener('click', () => {
-				if (confirm('Delete ALL presets?')) {
-					localStorage.removeItem(PRESET_KEY);
-					renderPresets();
-				}
-			});
-			presetsContainer.appendChild(clearAll);
+	function renderPresets() {
+		const arr = loadPresetsFromStorage();
+		presetsContainer.innerHTML = '';
+		if (!arr.length) {
+			presetsContainer.innerHTML = '<div class="muted">No presets saved.</div>';
+			return;
 		}
+		arr.forEach((p, i) => {
+			const row = document.createElement('div');
+			row.className = 'preset-row';
+			const btn = document.createElement('button');
+			btn.textContent = `Preset ${i + 1}: ${p.mbti || '-'} | ${p.fourletter || '-'} | ${p.enneagram || '-'} | ${p.cep || '-'} | ${p.ops || '-'} | ${p.classpect || '-'}`;
+			btn.addEventListener('click', () => loadPreset(p));
+			const del = document.createElement('button');
+			del.textContent = '❌';
+			del.style.background = '#f88';
+			del.style.border = 'none';
+			del.style.borderRadius = '4px';
+			del.addEventListener('click', () => {
+				const updated = loadPresetsFromStorage().filter((_, idx) => idx !== i);
+				savePresetsToStorage(updated);
+				renderPresets();
+			});
+			row.appendChild(btn);
+			row.appendChild(del);
+			presetsContainer.appendChild(row);
+		});
+		// add clear all
+		const clearAll = document.createElement('button');
+		clearAll.textContent = 'Clear All Presets';
+		clearAll.style.marginTop = '8px';
+		clearAll.style.background = '#faa';
+		clearAll.addEventListener('click', () => {
+			if (confirm('Delete ALL presets?')) {
+				localStorage.removeItem(PRESET_KEY);
+				renderPresets();
+			}
+		});
+		presetsContainer.appendChild(clearAll);
+	}
+
 
 		function makePresetFromForm() {
 			const preset = {
