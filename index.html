@@ -553,7 +553,7 @@
 				const row = document.createElement('div');
 				row.className = 'preset-row';
 				const btn = document.createElement('button');
-				btn.textContent = `Preset ${i + 1}: ${p.mbti || '-'} | ${p.fourletter || '-'} | ${p.enneagram || '-'} | ${p.ops || '-'}`;
+				btn.textContent = `Preset ${i + 1}: ${p.mbti || '-'} | ${p.fourletter || '-'} | ${p.enneagram || '-'} | ${p.cep || '-'} ${p.ops || '-'} | ${p.classpect || '-'} | ;
 				btn.addEventListener('click', () => loadPreset(p));
 				const del = document.createElement('button');
 				del.textContent = '❌';
