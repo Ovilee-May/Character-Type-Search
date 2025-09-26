@@ -45,7 +45,6 @@
 			font-size: 13px;
 		}
 
-		/* NEW: flex layout */
 		.container {
 			display: flex;
 			gap: 60px;
@@ -109,22 +108,22 @@
 				<label>MBTI (4-letter)</label>
 				<select id="fourletter">
 					<option value="">— any —</option>
-					<option value="INTJ">INTJ</option>
-					<option value="INFJ">INFJ</option>
-					<option value="INTP">INTP</option>
-					<option value="INFP">INFP</option>
-					<option value="ENTJ">ENTJ</option>
-					<option value="ENTP">ENTP</option>
-					<option value="ENFJ">ENFJ</option>
-					<option value="ENFP">ENFP</option>
-					<option value="ISTJ">ISTJ</option>
-					<option value="ISFJ">ISFJ</option>
-					<option value="ISTP">ISTP</option>
-					<option value="ISFP">ISFP</option>
-					<option value="ESTJ">ESTJ</option>
-					<option value="ESFJ">ESFJ</option>
-					<option value="ESTP">ESTP</option>
-					<option value="ESFP">ESFP</option>
+					<option>INTJ</option>
+					<option>INFJ</option>
+					<option>INTP</option>
+					<option>INFP</option>
+					<option>ENTJ</option>
+					<option>ENTP</option>
+					<option>ENFJ</option>
+					<option>ENFP</option>
+					<option>ISTJ</option>
+					<option>ISFJ</option>
+					<option>ISTP</option>
+					<option>ISFP</option>
+					<option>ESTJ</option>
+					<option>ESFJ</option>
+					<option>ESTP</option>
+					<option>ESFP</option>
 				</select>
 
 				<label>Enneagram (example: 5)</label>
@@ -133,33 +132,33 @@
 				<label>Enneagram Instinct</label>
 				<select id="cep">
 					<option value="">— any —</option>
-					<option value="SO1">SO1</option>
-					<option value="SP1">SP1</option>
-					<option value="SX1">SX1</option>
-					<option value="SO2">SO2</option>
-					<option value="SP2">SP2</option>
-					<option value="SX2">SX2</option>
-					<option value="SO3">SO3</option>
-					<option value="SP3">SP3</option>
-					<option value="SX3">SX3</option>
-					<option value="SO4">SO4</option>
-					<option value="SP4">SP4</option>
-					<option value="SX4">SX4</option>
-					<option value="SO5">SO5</option>
-					<option value="SP5">SP5</option>
-					<option value="SX5">SX5</option>
-					<option value="SO6">SO6</option>
-					<option value="SP6">SP6</option>
-					<option value="SX6">SX6</option>
-					<option value="SO7">SO7</option>
-					<option value="SP7">SP7</option>
-					<option value="SX7">SX7</option>
-					<option value="SO8">SO8</option>
-					<option value="SP8">SP8</option>
-					<option value="SX8">SX8</option>
-					<option value="SO9">SO9</option>
-					<option value="SP9">SP9</option>
-					<option value="SX9">SX9</option>
+					<option>SO1</option>
+					<option>SP1</option>
+					<option>SX1</option>
+					<option>SO2</option>
+					<option>SP2</option>
+					<option>SX2</option>
+					<option>SO3</option>
+					<option>SP3</option>
+					<option>SX3</option>
+					<option>SO4</option>
+					<option>SP4</option>
+					<option>SX4</option>
+					<option>SO5</option>
+					<option>SP5</option>
+					<option>SX5</option>
+					<option>SO6</option>
+					<option>SP6</option>
+					<option>SX6</option>
+					<option>SO7</option>
+					<option>SP7</option>
+					<option>SX7</option>
+					<option>SO8</option>
+					<option>SP8</option>
+					<option>SX8</option>
+					<option>SO9</option>
+					<option>SP9</option>
+					<option>SX9</option>
 				</select>
 
 				<label>Socionics subtype</label>
@@ -168,22 +167,22 @@
 				<label>Neurotype</label>
 				<select id="neurotype">
 					<option value="">— any —</option>
-					<option value="Computer">Computer</option>
-					<option value="Analyst">Analyst</option>
-					<option value="Fascinator">Fascinator</option>
-					<option value="Newtype">Newtype</option>
-					<option value="Technician">Technician</option>
-					<option value="Astute">Astute</option>
-					<option value="Overseer">Overseer</option>
-					<option value="Aesthetician">Aesthetician</option>
-					<option value="Contemplative">Contemplative</option>
-					<option value="Understanding">Understanding</option>
-					<option value="Externalist">Externalist</option>
-					<option value="Sensate">Sensate</option>
-					<option value="Bookkeeper">Bookkeeper</option>
-					<option value="Level-Headed">Level-Headed</option>
-					<option value="Clearsighted">Clearsighted</option>
-					<option value="Instinctual">Instinctual</option>
+					<option>Computer</option>
+					<option>Analyst</option>
+					<option>Fascinator</option>
+					<option>Newtype</option>
+					<option>Technician</option>
+					<option>Astute</option>
+					<option>Overseer</option>
+					<option>Aesthetician</option>
+					<option>Contemplative</option>
+					<option>Understanding</option>
+					<option>Externalist</option>
+					<option>Sensate</option>
+					<option>Bookkeeper</option>
+					<option>Level-Headed</option>
+					<option>Clearsighted</option>
+					<option>Instinctual</option>
 				</select>
 
 				<label>Classpect</label>
@@ -231,7 +230,6 @@
 			.then(data => {
 				characters = data;
 				console.log("Characters loaded:", characters.length);
-				if (characters.length) console.log("Example new character:", characters[characters.length - 1]);
 				populateNotesFilter();
 				populateGenreFilter();
 			})
@@ -248,7 +246,6 @@
 
 		function populateGenreFilter() {
 			if (characters.length === 0) return;
-
 			const genreSet = new Set();
 			characters.forEach(char => {
 				if (char && char.genre != null) {
@@ -262,33 +259,24 @@
 
 			const genreSelect = document.getElementById("genreFilter");
 			genreSelect.innerHTML = '<option value="">All</option>';
-
-			Array.from(genreSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })).forEach(genre => {
-				const option = document.createElement("option");
-				option.value = genre;
-				option.textContent = genre;
-				genreSelect.appendChild(option);
-			});
+			Array.from(genreSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+				.forEach(genre => {
+					const option = document.createElement("option");
+					option.value = genre;
+					option.textContent = genre;
+					genreSelect.appendChild(option);
+				});
 		}
 
 		function populateNotesFilter() {
 			if (characters.length === 0) return;
-
 			const notesSet = new Set();
-
 			characters.forEach(c => {
 				if (c && c.notes != null) {
-
 					if (Array.isArray(c.notes)) {
-						c.notes.forEach(item => {
-							if (item != null) {
-								const s = String(item).trim();
-								if (s !== '') notesSet.add(s);
-							}
-						});
+						c.notes.forEach(item => { if (item != null) { const s = String(item).trim(); if (s !== '') notesSet.add(s); } });
 					} else {
-						const s = String(c.notes);
-						s.split('/').forEach(part => {
+						String(c.notes).split('/').forEach(part => {
 							const t = part.trim();
 							if (t !== '') notesSet.add(t);
 						});
@@ -298,28 +286,25 @@
 
 			const select = document.getElementById("notesFilter");
 			select.innerHTML = '<option value="">All</option>';
-
-			Array.from(notesSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })).forEach(n => {
-				const opt = document.createElement("option");
-				opt.value = n;
-				opt.textContent = n;
-				select.appendChild(opt);
-			});
+			Array.from(notesSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+				.forEach(n => {
+					const opt = document.createElement("option");
+					opt.value = n;
+					opt.textContent = n;
+					select.appendChild(opt);
+				});
 		}
 
-		/*
-		 parsePair:
-		 Accepts either "Ni/Fe" or "NiFe" (or similar). Returns array of two-letter tokens like ["Ni","Fe"].
-		*/
+		// parse MBTI function pair written as "Ni/Fe" OR old "NiFe" (returns array)
 		function parsePair(raw) {
 			if (!raw) return [];
 			const s = String(raw).trim();
-			if (s.includes("/")) {
-				return s.split("/").map(x => x.trim());
+			if (s.includes('/')) {
+				return s.split('/').map(x => x.trim());
 			}
-			// prefer explicit two-letter tokens (e.g. NiFe -> ["Ni","Fe"])
-			const tokens = s.match(/[A-Za-z]{2}/g);
-			return tokens || [];
+			// fallback: split into 2-letter parts if possible
+			const m = s.match(/.{1,2}/g);
+			return m ? m.map(x => x.trim()) : [s];
 		}
 
 		function mbtiPairScore(a, b) {
@@ -332,21 +317,19 @@
 			return 0;
 		}
 
-		/* OPS matching:
-		 Accepts forms like "CS/PB" or "CS,PB" or "CS PB" and returns 1 for exact match,
-		 otherwise fraction of shared tokens normalized by the larger token count.
-		*/
 		function opsMatch(u, c) {
 			if (!u || !c) return 0;
 			const U = String(u).trim().toUpperCase();
 			const C = String(c).trim().toUpperCase();
 			if (U === C) return 1;
-
-			const splitTokens = str => str.split(/[\/,\s]+/).map(x => x.trim()).filter(Boolean);
-			const uParts = splitTokens(U);
-			const cParts = splitTokens(C);
-			if (uParts.length === 0 || cParts.length === 0) return 0;
+			const uParts = U.split('/').map(x => x.trim()).filter(Boolean);
+			const cParts = C.split('/').map(x => x.trim()).filter(Boolean);
 			const shared = uParts.filter(x => cParts.includes(x));
+			if (shared.length === 0) {
+				// if one contains the other as substring (e.g. "CS" vs "CS/PB")
+				if (cParts.some(p => p.includes(U)) || uParts.some(p => p.includes(C))) return 0.5;
+				return 0;
+			}
 			return shared.length / Math.max(uParts.length, cParts.length);
 		}
 
@@ -355,8 +338,8 @@
 			const u = String(userCep).trim().toUpperCase();
 			const c = String(charCep).trim().toUpperCase();
 			if (u === c) return 1;
-			// fallback: compare the numeric / level char (index 2) when format is e.g. SO1
-			if (u.length > 2 && c.length > 2 && u[2] === c[2]) return 0.5;
+			// check third character (1,2,3 etc.) if present
+			if (u.length >= 3 && c.length >= 3 && u[2] === c[2]) return 0.5;
 			return 0;
 		}
 
@@ -378,7 +361,6 @@
 			const U = u.trim().toUpperCase();
 			const C = c.trim().toUpperCase();
 			if (U === C) return 1;
-
 			let matches = 0;
 			for (let i = 0; i < 4; i++) {
 				if (U[i] === C[i]) matches++;
@@ -388,74 +370,50 @@
 
 		function enneagramMatch(userInput, charEnneagram) {
 			if (!userInput || !charEnneagram) return 0;
-			const uStr = String(userInput).trim();
-			const cStr = String(charEnneagram).trim();
-			const uMatch = uStr.match(/\d/);
-			const cMatch = cStr.match(/\d/);
+			const uMatch = String(userInput).match(/\d/);
+			const cMatch = String(charEnneagram).match(/\d/);
 			if (!uMatch || !cMatch) return 0;
 			return uMatch[0] === cMatch[0] ? 1 : 0;
 		}
 
 		function computeScore(user, char) {
-			let score = 0;
-
 			const weights = {
 				mbti: 0.30,
 				fourletter: 0.20,
-				enneagram: 0.15,
-				socionics: 0.10,
+				enneagram: 0.12,
+				socionics: 0.08,
 				neurotype: 0.10,
-				classpect: 0.075,
-				ap: 0.075,
+				classpect: 0.05,
+				ap: 0.05,
 				cep: 0.05,
 				ops: 0.05
 			};
 
 			const active = [];
 			if (document.getElementById("useMbti").checked) active.push("mbti");
+			if (document.getElementById("use4Letter").checked) active.push("fourletter");
 			if (document.getElementById("useEnneagram").checked) active.push("enneagram");
 			if (document.getElementById("useSocionics").checked) active.push("socionics");
 			if (document.getElementById("useNeurotype").checked) active.push("neurotype");
 			if (document.getElementById("useClasspect").checked) active.push("classpect");
 			if (document.getElementById("useAp").checked) active.push("ap");
 			if (document.getElementById("useCep").checked) active.push("cep");
-			if (document.getElementById("use4Letter").checked) active.push("fourletter");
 			if (document.getElementById("useOps").checked) active.push("ops");
 
 			if (active.length === 0) return 0;
+			const totalWeight = active.reduce((sum, key) => sum + (weights[key] || 0), 0) || 1;
+			const w = key => (weights[key] || 0) / totalWeight;
 
-			// compute total weight only for active keys (safety)
-			const totalWeight = active.reduce((sum, key) => sum + (weights[key] || 0), 0);
-			if (totalWeight === 0) return 0;
-			const w = (key) => (weights[key] || 0) / totalWeight;
-
-			if (active.includes("mbti")) {
-				score += mbtiPairScore(user.mbti, char.mbti) * w("mbti");
-			}
-			if (active.includes("enneagram")) {
-				score += enneagramMatch(user.enneagram, char.enneagram) * w("enneagram");
-			}
-			if (active.includes("socionics")) {
-				score += textMatch(user.socionics, char.socionics) * w("socionics");
-			}
-			if (active.includes("neurotype")) {
-				score += neurotypeScore(user.neurotype, char.neurotype) * w("neurotype");
-			}
-			if (active.includes("classpect")) {
-				score += textMatch(user.classpect, char.classpect) * w("classpect");
-			}
-			if (active.includes("ap")) {
-				score += textMatch(user.ap, char.ap) * w("ap");
-			}
-			if (active.includes("fourletter")) {
-				score += fourLetterMatch(user.fourletter, char.fourletter) * w("fourletter");
-			}
-			if (active.includes("cep")) {
-				score += cepMatch(user.cep, char.cep) * w("cep");
-			}
-			if (active.includes("ops")) {
-				score += opsMatch(user.ops, char.ops || char.opsAnimals || "") * w("ops");
-			}
+			let score = 0;
+			if (active.includes("mbti")) score += mbtiPairScore(user.mbti, char.mbti) * w("mbti");
+			if (active.includes("fourletter")) score += fourLetterMatch(user.fourletter, char.fourletter) * w("fourletter");
+			if (active.includes("enneagram")) score += enneagramMatch(user.enneagram, char.enneagram) * w("enneagram");
+			if (active.includes("socionics")) score += textMatch(user.socionics, char.socionics) * w("socionics");
+			if (active.includes("neurotype")) score += neurotypeScore(user.neurotype, char.neurotype) * w("neurotype");
+			if (active.includes("classpect")) score += textMatch(user.classpect, char.classpect) * w("classpect");
+			if (active.includes("ap")) score += textMatch(user.ap, char.ap) * w("ap");
+			if (active.includes("cep")) score += cepMatch(user.cep, char.cep) * w("cep");
+			if (active.includes("ops")) score += opsMatch(user.ops, char.ops || char.animals || '') * w("ops");
 
 			return score;
 		}
@@ -467,26 +425,24 @@
 			}
 
 			const user = {
-				mbti: document.getElementById("mbti").value.trim(),
-				enneagram: document.getElementById("enneagram").value.trim(),
-				socionics: document.getElementById("socionics").value.trim(),
-				neurotype: document.getElementById("neurotype").value.trim(),
-				classpect: document.getElementById("classpect").value.trim(),
-				ap: document.getElementById("ap").value.trim(),
-				cep: document.getElementById("cep").value.trim(),
-				fourletter: document.getElementById("fourletter").value.trim(),
-				ops: document.getElementById("animals").value.trim()
+				mbti: document.getElementById("mbti").value || '',
+				enneagram: document.getElementById("enneagram").value || '',
+				socionics: document.getElementById("socionics").value || '',
+				neurotype: document.getElementById("neurotype").value || '',
+				classpect: document.getElementById("classpect").value || '',
+				ap: document.getElementById("ap").value || '',
+				cep: document.getElementById("cep").value || '',
+				fourletter: document.getElementById("fourletter").value || '',
+				ops: document.getElementById("ops").value || ''
 			};
 
 			const genreFilterRaw = document.getElementById("genreFilter").value;
 			const genreFilter = genreFilterRaw ? String(genreFilterRaw).trim().toLowerCase() : '';
-
 			const selectedNotesRaw = document.getElementById("notesFilter").value;
 			const selectedNotes = selectedNotesRaw ? String(selectedNotesRaw).trim().toLowerCase() : '';
 
 			let filteredChars = characters.slice();
 
-			// Genre filter
 			if (genreFilter !== '') {
 				filteredChars = filteredChars.filter(c => {
 					if (!c || c.genre == null) return false;
@@ -495,19 +451,15 @@
 				});
 			}
 
-			// Notes / show filter
 			if (selectedNotes !== '') {
 				filteredChars = filteredChars.filter(c => {
 					if (!c || c.notes == null) return false;
-
 					let noteOptions = [];
-
 					if (Array.isArray(c.notes)) {
 						noteOptions = c.notes.map(x => String(x).trim().toLowerCase()).filter(x => x !== '');
 					} else {
 						noteOptions = String(c.notes).split("/").map(x => x.trim().toLowerCase()).filter(x => x !== '');
 					}
-
 					return noteOptions.includes(selectedNotes);
 				});
 			}
@@ -519,23 +471,20 @@
 
 			const scored = filteredChars.map(c => ({ ...c, similarity: computeScore(user, c) }));
 			scored.sort((a, b) => b.similarity - a.similarity);
-
 			const top = scored.slice(0, 25);
+
 			document.getElementById("results").innerHTML = "<h2>Top Matches</h2>" + top.map(c => `
 		<div class="character">
 		  <strong>${c.name || 'Unnamed'}</strong> (${c.notes || 'N/A'}) — ${Math.round((c.similarity || 0) * 100)}%<br>
-		  <span class="muted">
-			4letter MBTI: ${c.fourletter || 'N/A'}, Function MBTI: ${c.mbti || 'N/A'}, Enneagram: ${c.enneagram || 'N/A'},
-			Instinct: ${c.cep || 'N/A'}, Socionics: ${c.socionics || 'N/A'}, Neurotype: ${c.neurotype || 'N/A'},
-			OPS: ${c.ops || c.opsAnimals || 'N/A'}, Genre: ${c.genre || 'N/A'}
-		  </span>
+		  <span class="muted"> 4letter MBTI: ${c.fourletter || 'N/A'}, Function MBTI: ${c.mbti || 'N/A'}, Enneagram: ${c.enneagram || 'N/A'}, Instinct: ${c.cep || 'N/A'}, Socionics: ${c.socionics || 'N/A'},
+		  Neurotype: ${c.neurotype || 'N/A'}, OPS: ${c.ops || c.animals || 'N/A'}, Genre: ${c.genre || 'N/A'}</span>
 		</div>
 	  `).join("");
 		}
 
 		document.getElementById("findBtn").addEventListener("click", runSimilarityCheck);
 
-		// ensure filters populated if characters already loaded (edge-case)
+		// Ensure filters are available if characters loaded after DOM ready
 		document.addEventListener('DOMContentLoaded', function () {
 			if (characters.length > 0) {
 				populateGenreFilter();
