@@ -522,7 +522,7 @@
 			resultsEl.innerHTML = '<h2>Top Matches</h2>' + top.map(c => `
 					<div class="character">
 						<strong>${c.name || 'Unnamed'}</strong> (${c.notes || c.show || 'N/A'}) — ${Math.round((c.similarity || 0) * 100)}%<br>
-						<span class="muted">4L: ${c.fourletter || c.mbti4 || 'N/A'}, Func: ${c.mbti || c.function || 'N/A'}, Enneagram: ${c.enneagram || 'N/A'}, Instinct: ${c.cep || 'N/A'}, Socionics: ${c.socionics || 'N/A'}, OPS: ${c.ops || c.animals || 'N/A'}, Genre: ${c.genre || 'N/A'}</span>
+						<span class="muted">4L: ${c.fourletter || c.mbti4 || 'N/A'}, Func: ${c.mbti || c.function || 'N/A'}, Enneagram: ${c.enneagram || 'N/A'}, Instinct: ${c.cep || 'N/A'}, Socionics: ${c.socionics || 'N/A'}, OPS: ${c.ops || c.animals || 'N/A'}, Classpect: ${c.classpect || 'N/A'}, Genre: ${c.genre || 'N/A'}</span>
 					</div>
 				`).join('');
 		}
