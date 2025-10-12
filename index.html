@@ -426,7 +426,7 @@
 				return '';
 			};
 
-			const charMbti = get(char, 'mbti', 'function', 'functions', 'func', 'fn');
+			const charMbti = get(char, 'mbti', 'saviors', 'functions', 'func', 'fn');
 			const charFour = get(char, 'fourletter', 'four', 'mbti4');
 			const charEnn = get(char, 'enneagram', 'ennea');
 			const charSoc = get(char, 'socionics', 'soc');
@@ -522,7 +522,7 @@
 			resultsEl.innerHTML = '<h2>Top Matches</h2>' + top.map(c => `
 					<div class="character">
 						<strong>${c.name || 'Unnamed'}</strong> (${c.notes || c.show || 'N/A'}) — ${Math.round((c.similarity || 0) * 100)}%<br>
-						<span class="muted">4L: ${c.fourletter || c.mbti4 || 'N/A'}, Func: ${c.mbti || c.function || 'N/A'}, Enneagram: ${c.enneagram || 'N/A'}, Instinct: ${c.cep || 'N/A'}, Socionics: ${c.socionics || 'N/A'}, OPS: ${c.ops || c.animals || 'N/A'}, Classpect: ${c.classpect || 'N/A'}, Genre: ${c.genre || 'N/A'}</span>
+						<span class="muted">MBTI: ${c.fourletter || c.mbti4 || 'N/A'}, Saviors: ${c.mbti || c.saviors || 'N/A'}, Enneagram: ${c.enneagram || 'N/A'}, Instinct: ${c.cep || 'N/A'}, Socionics: ${c.socionics || 'N/A'}, OPS: ${c.ops || c.animals || 'N/A'}, Classpect: ${c.classpect || 'N/A'}, Neurotype: ${c.neurotype || 'N/A'}, AP: ${c.ap || 'N/A'}, Genre: ${c.genre || 'N/A'}</span>
 					</div>
 				`).join('');
 		}
