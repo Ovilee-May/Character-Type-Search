@@ -1,635 +1,591 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<meta charset="utf-8" />
-	<title>Character Similarity Finder — Debuggable + Presets</title>
-	<style>
-		body {
-			font-family: system-ui, -apple-system, "Segoe UI", Roboto;
-			margin: 20px;
-			color: #111;
-		}
+  <meta charset="utf-8" />
+  <title>Character Similarity Finder — Debuggable + Presets + Images</title>
+  <style>
+    /* Grid / card styles */
+    .character-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .character-card {
+      background-color: #f9f9fb;
+      border-radius: 15px;
+      padding: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      text-align: left;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      display: flex;
+      flex-direction: column;
+      min-height: 320px;
+      overflow: hidden;
+    }
+    .character-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
 
-		label {
-			display: block;
-			margin-top: 12px;
-			font-size: 14px;
-		}
+    .char-media {
+      width: 100%;
+      height: 200px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: linear-gradient(180deg,#e9e9ef,#f6f6fa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .char-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display:block;
+    }
+    .char-placeholder {
+      width: 100%;
+      height: 100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#777;
+      font-size:14px;
+      padding:10px;
+      box-sizing:border-box;
+    }
 
-		select, input {
-			margin-top: 6px;
-			padding: 8px;
-			width: 320px;
-			max-width: 100%;
-		}
+    .character-info {
+      padding-top: 10px;
+      flex: 1;
+    }
+    .character-info h3 {
+      margin: 0 0 6px;
+      font-size: 1.05rem;
+      color: #222;
+    }
+    .character-info .meta {
+      color:#555;
+      font-size: 0.9rem;
+      margin-bottom:8px;
+    }
+    .character-info .small {
+      color:#666;
+      font-size:0.85rem;
+      line-height:1.25;
+    }
 
-		button {
-			margin-top: 12px;
-			padding: 10px 14px;
-			border-radius: 8px;
-			cursor: pointer;
-		}
+    /* Rest of page styles */
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto; margin: 20px; color: #111; }
+    label { display:block; margin-top:12px; font-size:14px; }
+    select,input { margin-top:6px; padding:8px; width:320px; max-width:100%; }
+    button { margin-top:12px; padding:10px 14px; border-radius:8px; cursor:pointer; }
+    .results { margin-top:22px; max-width:1100px; }
+    .muted { color:#666; font-size:13px; }
+    .status { margin-top:10px; color:#555; }
+    .error { color:#b00020; }
 
-		.results {
-			margin-top: 22px;
-			max-width: 900px;
-		}
+    .container { display:flex; gap:40px; align-items:flex-start; }
+    .form-column { flex:1; max-width:540px; }
+    .results-column { flex:2; }
 
-		.character {
-			border-bottom: 1px solid #e6e6e6;
-			padding: 10px 0;
-		}
+    .presets { margin-top:12px; }
+    .preset-row { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+    .preset-row button { margin:0; }
 
-		.muted {
-			color: #666;
-			font-size: 13px;
-		}
-
-		.status {
-			margin-top: 10px;
-			color: #555;
-		}
-
-		.error {
-			color: #b00020;
-		}
-
-		.container {
-			display: flex;
-			gap: 40px;
-			align-items: flex-start;
-		}
-
-		.form-column {
-			flex: 1;
-			max-width: 540px;
-		}
-
-		.results-column {
-			flex: 2;
-		}
-
-		.presets {
-			margin-top: 12px;
-		}
-
-		.preset-row {
-			display: flex;
-			gap: 8px;
-			align-items: center;
-			margin-bottom: 6px;
-		}
-
-			.preset-row button {
-				margin: 0;
-			}
-	</style>
+    @media (max-width: 880px) {
+      .container { flex-direction: column; }
+      select,input { width:100%; }
+    }
+  </style>
 </head>
 <body>
 
-	<h1>Find Your Most Similar Characters</h1>
-	<div class="status" id="status">Loading characters...</div>
+  <h1>Find Your Most Similar Characters</h1>
+  <div class="status" id="status">Loading characters...</div>
 
-	<div class="container">
-		<div class="form-column">
-			<form id="testForm" onsubmit="return false;">
-				<label>MBTI (function pair)</label>
-				<select id="mbti">
-					<option value="">— any —</option>
-					<option value="Ni/Te">Ni/Te</option>
-					<option value="Ni/Fe">Ni/Fe</option>
-					<option value="Ni/Ti">Ni/Ti</option>
-					<option value="Ne/Fi">Ne/Fi</option>
-					<option value="Ne/Ti">Ne/Ti</option>
-					<option value="Ne/Fe">Ne/Fe</option>
-					<option value="Si/Te">Si/Te</option>
-					<option value="Si/Fe">Si/Fe</option>
-					<option value="Si/Ti">Si/Ti</option>
-					<option value="Se/Fi">Se/Fi</option>
-					<option value="Se/Ti">Se/Ti</option>
-					<option value="Se/Fe">Se/Fe</option>
-					<option value="Ti/Ne">Ti/Ne</option>
-					<option value="Ti/Se">Ti/Se</option>
-					<option value="Ti/Si">Ti/Si</option>
-					<option value="Te/Ni">Te/Ni</option>
-					<option value="Te/Si">Te/Si</option>
-					<option value="Te/Se">Te/Se</option>
-					<option value="Fi/Ne">Fi/Ne</option>
-					<option value="Fi/Se">Fi/Se</option>
-					<option value="Fi/Si">Fi/Si</option>
-					<option value="Fe/Ni">Fe/Ni</option>
-					<option value="Fe/Si">Fe/Si</option>
-					<option value="Fe/Se">Fe/Se</option>
-					<option value="Ni/Fi">Ni/Fi</option>
-					<option value="Ne/Te">Ne/Te</option>
-					<option value="Si/Fi">Si/Fi</option>
-					<option value="Se/Te">Se/Te</option>
-					<option value="Ti/Ni">Ti/Ni</option>
-					<option value="Te/Ne">Te/Ne</option>
-					<option value="Fi/Ni">Fi/Ni</option>
-					<option value="Fe/Ne">Fe/Ne</option>
-				</select>
+  <div class="container">
+    <div class="form-column">
+      <form id="testForm" onsubmit="return false;">
+        <label>MBTI (function pair)</label>
+        <select id="mbti">
+          <option value="">— any —</option>
+          <option value="Ni/Te">Ni/Te</option>
+          <option value="Ni/Fe">Ni/Fe</option>
+          <option value="Ni/Ti">Ni/Ti</option>
+          <option value="Ne/Fi">Ne/Fi</option>
+          <option value="Ne/Ti">Ne/Ti</option>
+          <option value="Ne/Fe">Ne/Fe</option>
+          <option value="Si/Te">Si/Te</option>
+          <option value="Si/Fe">Si/Fe</option>
+          <option value="Si/Ti">Si/Ti</option>
+          <option value="Se/Fi">Se/Fi</option>
+          <option value="Se/Ti">Se/Ti</option>
+          <option value="Se/Fe">Se/Fe</option>
+          <option value="Ti/Ne">Ti/Ne</option>
+          <option value="Ti/Se">Ti/Se</option>
+          <option value="Ti/Si">Ti/Si</option>
+          <option value="Te/Ni">Te/Ni</option>
+          <option value="Te/Si">Te/Si</option>
+          <option value="Te/Se">Te/Se</option>
+          <option value="Fi/Ne">Fi/Ne</option>
+          <option value="Fi/Se">Fi/Se</option>
+          <option value="Fi/Si">Fi/Si</option>
+          <option value="Fe/Ni">Fe/Ni</option>
+          <option value="Fe/Si">Fe/Si</option>
+          <option value="Fe/Se">Fe/Se</option>
+          <option value="Ni/Fi">Ni/Fi</option>
+          <option value="Ne/Te">Ne/Te</option>
+          <option value="Si/Fi">Si/Fi</option>
+          <option value="Se/Te">Se/Te</option>
+          <option value="Ti/Ni">Ti/Ni</option>
+          <option value="Te/Ne">Te/Ne</option>
+          <option value="Fi/Ni">Fi/Ni</option>
+          <option value="Fe/Ne">Fe/Ne</option>
+        </select>
 
-				<label>MBTI (4-letter)</label>
-				<select id="fourletter">
-					<option value="">— any —</option>
-					<option>INTJ</option>
-					<option>INFJ</option>
-					<option>INTP</option>
-					<option>INFP</option>
-					<option>ENTJ</option>
-					<option>ENTP</option>
-					<option>ENFJ</option>
-					<option>ENFP</option>
-					<option>ISTJ</option>
-					<option>ISFJ</option>
-					<option>ISTP</option>
-					<option>ISFP</option>
-					<option>ESTJ</option>
-					<option>ESFJ</option>
-					<option>ESTP</option>
-					<option>ESFP</option>
-				</select>
+        <label>MBTI (4-letter)</label>
+        <select id="fourletter">
+          <option value="">— any —</option>
+          <option>INTJ</option><option>INFJ</option><option>INTP</option><option>INFP</option>
+          <option>ENTJ</option><option>ENTP</option><option>ENFJ</option><option>ENFP</option>
+          <option>ISTJ</option><option>ISFJ</option><option>ISTP</option><option>ISFP</option>
+          <option>ESTJ</option><option>ESFJ</option><option>ESTP</option><option>ESFP</option>
+        </select>
 
-				<label>Enneagram (example: 5)</label>
-				<input id="enneagram" type="text" placeholder="e.g. 5">
+        <label>Enneagram (example: 5)</label>
+        <input id="enneagram" type="text" placeholder="e.g. 5">
 
-				<label>Enneagram Instinct</label>
-				<select id="cep">
-					<option value="">— any —</option>
-					<option>SO1</option>
-					<option>SP1</option>
-					<option>SX1</option>
-					<option>SO2</option>
-					<option>SP2</option>
-					<option>SX2</option>
-					<option>SO3</option>
-					<option>SP3</option>
-					<option>SX3</option>
-					<option>SO4</option>
-					<option>SP4</option>
-					<option>SX4</option>
-					<option>SO5</option>
-					<option>SP5</option>
-					<option>SX5</option>
-					<option>SO6</option>
-					<option>SP6</option>
-					<option>SX6</option>
-					<option>SO7</option>
-					<option>SP7</option>
-					<option>SX7</option>
-					<option>SO8</option>
-					<option>SP8</option>
-					<option>SX8</option>
-					<option>SO9</option>
-					<option>SP9</option>
-					<option>SX9</option>
-				</select>
+        <label>Enneagram Instinct</label>
+        <select id="cep">
+          <option value="">— any —</option>
+          <option>SO1</option><option>SP1</option><option>SX1</option><option>SO2</option><option>SP2</option><option>SX2</option>
+          <option>SO3</option><option>SP3</option><option>SX3</option><option>SO4</option><option>SP4</option><option>SX4</option>
+          <option>SO5</option><option>SP5</option><option>SX5</option><option>SO6</option><option>SP6</option><option>SX6</option>
+          <option>SO7</option><option>SP7</option><option>SX7</option><option>SO8</option><option>SP8</option><option>SX8</option>
+          <option>SO9</option><option>SP9</option><option>SX9</option>
+        </select>
 
-				<label>Socionics subtype</label>
-				<input id="socionics" type="text" placeholder="e.g. ILI-Te">
+        <label>Socionics subtype</label>
+        <input id="socionics" type="text" placeholder="e.g. ILI-Te">
 
-				<label>Neurotype</label>
-				<select id="neurotype">
-					<option value="">— any —</option>
-					<option>Computer</option>
-					<option>Analyst</option>
-					<option>Fascinator</option>
-					<option>Newtype</option>
-					<option>Technician</option>
-					<option>Astute</option>
-					<option>Overseer</option>
-					<option>Aesthetician</option>
-					<option>Contemplative</option>
-					<option>Understanding</option>
-					<option>Externalist</option>
-					<option>Sensate</option>
-					<option>Bookkeeper</option>
-					<option>Level-Headed</option>
-					<option>Clearsighted</option>
-					<option>Instinctual</option>
-				</select>
+        <label>Neurotype</label>
+        <select id="neurotype">
+          <option value="">— any —</option>
+          <option>Computer</option><option>Analyst</option><option>Fascinator</option><option>Newtype</option>
+          <option>Technician</option><option>Astute</option><option>Overseer</option><option>Aesthetician</option>
+          <option>Contemplative</option><option>Understanding</option><option>Externalist</option><option>Sensate</option>
+          <option>Bookkeeper</option><option>Level-Headed</option><option>Clearsighted</option><option>Instinctual</option>
+        </select>
 
-				<label>Classpect</label>
-				<input id="classpect" type="text" placeholder="e.g. Seer of Light">
+        <label>Classpect</label>
+        <input id="classpect" type="text" placeholder="e.g. Seer of Light">
 
-				<label>OPS Animals</label>
-				<input id="ops" type="text" placeholder="e.g. CS/PB">
+        <label>OPS Animals</label>
+        <input id="ops" type="text" placeholder="e.g. CS/PB">
 
-				<label>Attitudinal Psyche</label>
-				<input id="ap" type="text" placeholder="e.g. FEVL">
+        <label>Attitudinal Psyche</label>
+        <input id="ap" type="text" placeholder="e.g. FEVL">
 
-				<label>Genre (filter)</label>
-				<select id="genreFilter"><option value="">All</option></select>
+        <label>Genre (filter)</label>
+        <select id="genreFilter"><option value="">All</option></select>
 
-				<label>Show/Series</label>
-				<select id="notesFilter"><option value="">All</option></select>
+        <label>Show/Series</label>
+        <select id="notesFilter"><option value="">All</option></select>
 
-				<br>
-				<button type="button" id="findBtn" disabled>Find Matches</button>
-				<button type="button" id="savePresetBtn">Save Preset</button>
+        <br>
+        <button type="button" id="findBtn" disabled>Find Matches</button>
+        <button type="button" id="savePresetBtn">Save Preset</button>
 
-				<div class="presets" id="presetsContainer"></div>
+        <div class="presets" id="presetsContainer"></div>
 
-				<h3>Scoring Toggles</h3>
-				<label><input type="checkbox" id="useMbti" checked> Use MBTI (w/ Jumpers)</label>
-				<label><input type="checkbox" id="use4Letter" checked> Use MBTI (4-letter)</label>
-				<label><input type="checkbox" id="useEnneagram" checked> Use Enneagram</label>
-				<label><input type="checkbox" id="useSocionics" checked> Use Socionics</label>
-				<label><input type="checkbox" id="useNeurotype" checked> Use Neurotype</label>
-				<label><input type="checkbox" id="useClasspect" checked> Use Classpect</label>
-				<label><input type="checkbox" id="useOps" checked> Use OPS Animals</label>
-				<label><input type="checkbox" id="useAp" checked> Use Attitudinal Psyche</label>
-				<label><input type="checkbox" id="useCep" checked> Use Enneagram Instinct</label>
-			</form>
-		</div>
+        <h3>Scoring Toggles</h3>
+        <label><input type="checkbox" id="useMbti" checked> Use MBTI (w/ Jumpers)</label>
+        <label><input type="checkbox" id="use4Letter" checked> Use MBTI (4-letter)</label>
+        <label><input type="checkbox" id="useEnneagram" checked> Use Enneagram</label>
+        <label><input type="checkbox" id="useSocionics" checked> Use Socionics</label>
+        <label><input type="checkbox" id="useNeurotype" checked> Use Neurotype</label>
+        <label><input type="checkbox" id="useClasspect" checked> Use Classpect</label>
+        <label><input type="checkbox" id="useOps" checked> Use OPS Animals</label>
+        <label><input type="checkbox" id="useAp" checked> Use Attitudinal Psyche</label>
+        <label><input type="checkbox" id="useCep" checked> Use Enneagram Instinct</label>
+      </form>
+    </div>
 
-		<div class="results-column">
-			<div id="results" class="results"></div>
-		</div>
-	</div>
+    <div class="results-column">
+      <div id="results" class="results"></div>
+    </div>
+  </div>
 
-	<script>
-		// status & data
-		const statusEl = document.getElementById('status');
-		const resultsEl = document.getElementById('results');
-		const findBtn = document.getElementById('findBtn');
-		const savePresetBtn = document.getElementById('savePresetBtn');
-		const presetsContainer = document.getElementById('presetsContainer');
+  <script>
+    // basic refs
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+    const findBtn = document.getElementById('findBtn');
+    const savePresetBtn = document.getElementById('savePresetBtn');
+    const presetsContainer = document.getElementById('presetsContainer');
 
-		function setStatus(msg, isError = false) {
-			statusEl.textContent = msg;
-			statusEl.className = isError ? 'status error' : 'status';
-		}
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.className = isError ? 'status error' : 'status';
+    }
 
-		let characters = [];
+    // helper to get property values from character objects with multiple possible keys
+    function getProp(obj, ...keys) {
+      for (const k of keys) {
+        if (!k) continue;
+        if (k in obj && obj[k] != null) return obj[k];
+      }
+      return '';
+    }
 
-		// load characters
-		fetch('characters.json?nocache=' + Date.now())
-			.then(res => {
-				if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText);
-				return res.json();
-			})
-			.then(data => {
-				if (!Array.isArray(data)) {
-					console.warn('characters.json returned non-array, continuing with []');
-					characters = Array.isArray(data) ? data : [];
-					setStatus('Loaded data but format unexpected; continuing.', true);
-				} else {
-					characters = data;
-					setStatus('Characters loaded: ' + characters.length + '. Ready.');
-				}
-				populateNotesFilter();
-				populateGenreFilter();
-				findBtn.disabled = false;
-				renderPresets(); // show saved presets
-			})
-			.catch(err => {
-				console.error('Error loading characters.json:', err);
-				setStatus('Error loading characters.json — open console for details.', true);
-				resultsEl.innerHTML = '<p class="error">Error loading characters.json: ' + (err.message || err) + '</p>';
-				findBtn.disabled = true;
-			});
+    let characters = [];
 
-		const neuroGrid = {
-			"Computer": [0, 0], "Analyst": [1, 0], "Fascinator": [2, 0], "Newtype": [3, 0],
-			"Technician": [0, 1], "Astute": [1, 1], "Overseer": [2, 1], "Aesthetician": [3, 1],
-			"Contemplative": [0, 2], "Understanding": [1, 2], "Externalist": [2, 2], "Sensate": [3, 2],
-			"Bookkeeper": [0, 3], "Level-Headed": [1, 3], "Clearsighted": [2, 3], "Instinctual": [3, 3]
-		};
+    // load characters.json (served from your project)
+    fetch('characters.json?nocache=' + Date.now())
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText);
+        return res.json();
+      })
+      .then(data => {
+        if (!Array.isArray(data)) {
+          console.warn('characters.json returned non-array; continuing with []');
+          characters = Array.isArray(data) ? data : [];
+          setStatus('Loaded data but format unexpected; continuing.', true);
+        } else {
+          characters = data;
+          setStatus('Characters loaded: ' + characters.length + '. Ready.');
+        }
+        populateNotesFilter();
+        populateGenreFilter();
+        findBtn.disabled = false;
+        renderPresets();
+      })
+      .catch(err => {
+        console.error('Error loading characters.json:', err);
+        setStatus('Error loading characters.json — open console for details.', true);
+        resultsEl.innerHTML = '<p class="error">Error loading characters.json: ' + (err.message || err) + '</p>';
+        findBtn.disabled = true;
+      });
 
-		function populateGenreFilter() {
-			if (!characters || characters.length === 0) return;
-			const genreSet = new Set();
-			characters.forEach(char => {
-				if (!char) return;
-				const raw = char.genre || char.genres || char.category || '';
-				if (!raw) return;
-				String(raw).split('/').forEach(part => {
-					const t = part.trim();
-					if (t) genreSet.add(t);
-				});
-			});
-			const sel = document.getElementById('genreFilter');
-			sel.innerHTML = '<option value="">All</option>';
-			Array.from(genreSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
-				.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
-		}
+    const neuroGrid = {
+      "Computer": [0,0],"Analyst":[1,0],"Fascinator":[2,0],"Newtype":[3,0],
+      "Technician":[0,1],"Astute":[1,1],"Overseer":[2,1],"Aesthetician":[3,1],
+      "Contemplative":[0,2],"Understanding":[1,2],"Externalist":[2,2],"Sensate":[3,2],
+      "Bookkeeper":[0,3],"Level-Headed":[1,3],"Clearsighted":[2,3],"Instinctual":[3,3]
+    };
 
-		function populateNotesFilter() {
-			if (!characters || characters.length === 0) return;
-			const set = new Set();
-			characters.forEach(c => {
-				if (!c) return;
-				const notes = c.notes || c.show || c.series || '';
-				if (!notes) return;
-				if (Array.isArray(notes)) {
-					notes.forEach(n => { if (n) { const s = String(n).trim(); if (s) set.add(s); } });
-				} else {
-					String(notes).split('/').forEach(part => { const t = part.trim(); if (t) set.add(t); });
-				}
-			});
-			const sel = document.getElementById('notesFilter');
-			sel.innerHTML = '<option value="">All</option>';
-			Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
-				.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
-		}
+    function populateGenreFilter() {
+      if (!characters || characters.length === 0) return;
+      const genreSet = new Set();
+      characters.forEach(char => {
+        if (!char) return;
+        const raw = char.genre || char.genres || char.category || '';
+        if (!raw) return;
+        String(raw).split('/').forEach(part => {
+          const t = part.trim();
+          if (t) genreSet.add(t);
+        });
+      });
+      const sel = document.getElementById('genreFilter');
+      sel.innerHTML = '<option value="">All</option>';
+      Array.from(genreSet).sort((a,b) => a.localeCompare(b, undefined, { numeric:true, sensitivity:'base' }))
+        .forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+    }
 
-		// parse function pair but keep robust
-		function parsePair(raw) {
-			if (!raw) return [];
-			const s = String(raw).trim();
-			if (!s) return [];
-			if (s.includes('/')) return s.split('/').map(x => x.trim()).filter(Boolean);
-			if (s.includes(' ')) return s.split(/\s+/).map(x => x.trim()).filter(Boolean);
-			// fallback split into every 2 characters (NiTe -> ['Ni','Te'])
-			const m = s.match(/.{1,2}/g);
-			return m ? m.map(x => x.trim()) : [s];
-		}
+    function populateNotesFilter() {
+      if (!characters || characters.length === 0) return;
+      const set = new Set();
+      characters.forEach(c => {
+        if (!c) return;
+        const notes = c.notes || c.show || c.series || '';
+        if (!notes) return;
+        if (Array.isArray(notes)) {
+          notes.forEach(n => { if (n) { const s=String(n).trim(); if(s) set.add(s); } });
+        } else {
+          String(notes).split('/').forEach(part => { const t = part.trim(); if (t) set.add(t); });
+        }
+      });
+      const sel = document.getElementById('notesFilter');
+      sel.innerHTML = '<option value="">All</option>';
+      Array.from(set).sort((a,b)=>a.localeCompare(b, undefined, { numeric:true, sensitivity:'base' }))
+        .forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+    }
 
-		function mbtiPairScore(a, b) {
-			const A = parsePair(a), B = parsePair(b);
-			if (!A.length || !B.length) return 0;
-			if (A[0] === B[0] && A[1] === B[1]) return 1;
-			if (A[0] === B[0]) return 0.6;
-			if (A[1] === B[1]) return 0.4;
-			if (A.some(x => B.includes(x))) return 0.2;
-			return 0;
-		}
+    // parse function pair robustly (accepts Ni/Fe, NiFe, Ni Fe, or your 'saviors' strings)
+    function parsePair(raw) {
+      if (!raw) return [];
+      const s = String(raw).trim();
+      if (!s) return [];
+      if (s.includes('/')) return s.split('/').map(x=>x.trim()).filter(Boolean);
+      if (s.includes(' ')) return s.split(/\s+/).map(x=>x.trim()).filter(Boolean);
+      const m = s.match(/.{1,2}/g);
+      return m ? m.map(x=>x.trim()) : [s];
+    }
 
-		// OPS match: order-insensitive by comparing sets of parts (CS/BP == BP/CS)
-	function opsMatch(userOps, charOps) {
-	  if (!userOps || !charOps) return 0;
-	
-	  const uParts = String(userOps).trim().toUpperCase().split("/");
-	  const cParts = String(charOps).trim().toUpperCase().split("/");
-	
-	  // Exact match (same order)
-	  if (uParts.join("/") === cParts.join("/")) return 1;
-	
-	  // Partial: reward correct animals in correct slots
-	  let score = 0;
-	  for (let i = 0; i < Math.min(uParts.length, cParts.length); i++) {
-	    if (uParts[i] === cParts[i]) score += 1;
-	  }
-	
-	  // Normalize by length
-	  return score / Math.max(uParts.length, cParts.length);
-	}
+    function mbtiPairScore(a,b) {
+      const A = parsePair(a), B = parsePair(b);
+      if (!A.length || !B.length) return 0;
+      if (A[0] === B[0] && A[1] === B[1]) return 1;
+      if (A[0] === B[0]) return 0.6;
+      if (A[1] === B[1]) return 0.4;
+      if (A.some(x => B.includes(x))) return 0.2;
+      return 0;
+    }
 
+    // OPS match: ORDER-SENSITIVE
+    // exact same order => 1
+    // otherwise score = number of animals matching in same slot / max length
+    function opsMatch(u, c) {
+      if (!u || !c) return 0;
+      const U = String(u).trim().toUpperCase();
+      const C = String(c).trim().toUpperCase();
+      if (!U || !C) return 0;
+      const uParts = U.split('/').map(p=>p.trim()).filter(Boolean);
+      const cParts = C.split('/').map(p=>p.trim()).filter(Boolean);
+      if (uParts.join('/') === cParts.join('/')) return 1;
+      let matches = 0;
+      const len = Math.min(uParts.length, cParts.length);
+      for (let i=0;i<len;i++) {
+        if (uParts[i] === cParts[i]) matches++;
+      }
+      return matches / Math.max(uParts.length, cParts.length);
+    }
 
-		function cepMatch(u, c) {
-			if (!u || !c) return 0;
-			const U = String(u).trim().toUpperCase();
-			const C = String(c).trim().toUpperCase();
-			if (U === C) return 1;
-			if (U.length >= 3 && C.length >= 3 && U[2] === C[2]) return 0.5;
-			return 0;
-		}
+    function cepMatch(u, c) {
+      if (!u || !c) return 0;
+      const U = String(u).trim().toUpperCase();
+      const C = String(c).trim().toUpperCase();
+      if (U === C) return 1;
+      if (U.length >= 3 && C.length >= 3 && U[2] === C[2]) return 0.5;
+      return 0;
+    }
 
-		function neurotypeScore(uT, cT) {
-			if (!uT || !cT) return 0;
-			const u = neuroGrid[String(uT).trim()], c = neuroGrid[String(cT).trim()];
-			if (!u || !c) return 0;
-			const dx = u[0] - c[0], dy = u[1] - c[1];
-			return 1 - Math.sqrt(dx * dx + dy * dy) / Math.sqrt(18);
-		}
+    function neurotypeScore(uT,cT) {
+      if (!uT || !cT) return 0;
+      const u = neuroGrid[String(uT).trim()], c = neuroGrid[String(cT).trim()];
+      if (!u || !c) return 0;
+      const dx = u[0]-c[0], dy = u[1]-c[1];
+      return 1 - Math.sqrt(dx*dx+dy*dy) / Math.sqrt(18);
+    }
 
-		function textMatch(a, b) {
-			if (!a || !b) return 0;
-			return String(a).trim().toLowerCase() === String(b).trim().toLowerCase() ? 1 : 0;
-		}
+    function textMatch(a,b) {
+      if (!a || !b) return 0;
+      return String(a).trim().toLowerCase() === String(b).trim().toLowerCase() ? 1 : 0;
+    }
 
-		function fourLetterMatch(u, c) {
-			if (!u || !c) return 0;
-			const U = String(u).trim().toUpperCase(), C = String(c).trim().toUpperCase();
-			if (U === C) return 1;
-			let m = 0;
-			for (let i = 0; i < 4; i++) if (U[i] === C[i]) m++;
-			return m / 4;
-		}
+    function fourLetterMatch(u,c) {
+      if (!u || !c) return 0;
+      const U = String(u).trim().toUpperCase(), C = String(c).trim().toUpperCase();
+      if (U === C) return 1;
+      let m=0;
+      for (let i=0;i<4;i++) if (U[i] === C[i]) m++;
+      return m/4;
+    }
 
-		function enneagramMatch(u, c) {
-			if (!u || !c) return 0;
-			const um = String(u).match(/\d/), cm = String(c).match(/\d/);
-			if (!um || !cm) return 0;
-			return um[0] === cm[0] ? 1 : 0;
-		}
+    function enneagramMatch(u,c) {
+      if (!u || !c) return 0;
+      const um = String(u).match(/\d/), cm = String(c).match(/\d/);
+      if (!um || !cm) return 0;
+      return um[0] === cm[0] ? 1 : 0;
+    }
 
-		// computeScore uses flexible property names for characters
-		function computeScore(user, char) {
-			const get = (ch, ...keys) => {
-				for (const k of keys) {
-					if (!k) continue;
-					if (k in ch && ch[k] != null) return ch[k];
-				}
-				return '';
-			};
+    // computeScore (flexible property names)
+    function computeScore(user, char) {
+      const charMbti = getProp(char, 'mbti', 'saviors', 'function', 'functions', 'func', 'fn');
+      const charFour = getProp(char, 'fourletter', 'four', 'mbti4');
+      const charEnn = getProp(char, 'enneagram', 'ennea');
+      const charSoc = getProp(char, 'socionics', 'soc');
+      const charNeuro = getProp(char, 'neurotype', 'neuro');
+      const charClass = getProp(char, 'classpect', 'class');
+      const charAp = getProp(char, 'ap', 'attitudinal', 'attitude');
+      const charCep = getProp(char, 'cep', 'instinct');
+      const charOps = getProp(char, 'ops', 'animals', 'ops_animals', 'animal');
 
-			const charMbti = get(char, 'mbti', 'saviors', 'functions', 'func', 'fn');
-			const charFour = get(char, 'fourletter', 'four', 'mbti4');
-			const charEnn = get(char, 'enneagram', 'ennea');
-			const charSoc = get(char, 'socionics', 'soc');
-			const charNeuro = get(char, 'neurotype', 'neuro');
-			const charClass = get(char, 'classpect', 'class');
-			const charAp = get(char, 'ap', 'attitudinal', 'attitude');
-			const charCep = get(char, 'cep', 'instinct');
-			const charOps = get(char, 'ops', 'animals', 'ops_animals', 'animal');
+      const weights = {
+        mbti: 0.30, fourletter: 0.20, enneagram: 0.12, socionics: 0.08,
+        neurotype: 0.10, classpect: 0.05, ap: 0.05, cep: 0.05, ops: 0.05
+      };
 
-			const weights = {
-				mbti: 0.30, fourletter: 0.20, enneagram: 0.12, socionics: 0.08,
-				neurotype: 0.10, classpect: 0.05, ap: 0.05, cep: 0.05, ops: 0.05
-			};
+      const active = [];
+      if (document.getElementById('useMbti').checked) active.push('mbti');
+      if (document.getElementById('use4Letter').checked) active.push('fourletter');
+      if (document.getElementById('useEnneagram').checked) active.push('enneagram');
+      if (document.getElementById('useSocionics').checked) active.push('socionics');
+      if (document.getElementById('useNeurotype').checked) active.push('neurotype');
+      if (document.getElementById('useClasspect').checked) active.push('classpect');
+      if (document.getElementById('useAp').checked) active.push('ap');
+      if (document.getElementById('useCep').checked) active.push('cep');
+      if (document.getElementById('useOps').checked) active.push('ops');
 
-			const active = [];
-			if (document.getElementById('useMbti').checked) active.push('mbti');
-			if (document.getElementById('use4Letter').checked) active.push('fourletter');
-			if (document.getElementById('useEnneagram').checked) active.push('enneagram');
-			if (document.getElementById('useSocionics').checked) active.push('socionics');
-			if (document.getElementById('useNeurotype').checked) active.push('neurotype');
-			if (document.getElementById('useClasspect').checked) active.push('classpect');
-			if (document.getElementById('useAp').checked) active.push('ap');
-			if (document.getElementById('useCep').checked) active.push('cep');
-			if (document.getElementById('useOps').checked) active.push('ops');
+      if (active.length === 0) return 0;
+      const total = active.reduce((s,k)=> s + (weights[k]||0), 0) || 1;
+      const w = k => (weights[k]||0)/total;
 
-			if (active.length === 0) return 0;
-			const total = active.reduce((s, k) => s + (weights[k] || 0), 0) || 1;
-			const w = k => (weights[k] || 0) / total;
+      let score = 0;
+      if (active.includes('mbti')) score += mbtiPairScore(user.mbti, charMbti) * w('mbti');
+      if (active.includes('fourletter')) score += fourLetterMatch(user.fourletter, charFour) * w('fourletter');
+      if (active.includes('enneagram')) score += enneagramMatch(user.enneagram, charEnn) * w('enneagram');
+      if (active.includes('socionics')) score += textMatch(user.socionics, charSoc) * w('socionics');
+      if (active.includes('neurotype')) score += neurotypeScore(user.neurotype, charNeuro) * w('neurotype');
+      if (active.includes('classpect')) score += textMatch(user.classpect, charClass) * w('classpect');
+      if (active.includes('ap')) score += textMatch(user.ap, charAp) * w('ap');
+      if (active.includes('cep')) score += cepMatch(user.cep, charCep) * w('cep');
+      if (active.includes('ops')) score += opsMatch(user.ops, charOps) * w('ops');
 
-			let score = 0;
-			if (active.includes('mbti')) score += mbtiPairScore(user.mbti, charMbti) * w('mbti');
-			if (active.includes('fourletter')) score += fourLetterMatch(user.fourletter, charFour) * w('fourletter');
-			if (active.includes('enneagram')) score += enneagramMatch(user.enneagram, charEnn) * w('enneagram');
-			if (active.includes('socionics')) score += textMatch(user.socionics, charSoc) * w('socionics');
-			if (active.includes('neurotype')) score += neurotypeScore(user.neurotype, charNeuro) * w('neurotype');
-			if (active.includes('classpect')) score += textMatch(user.classpect, charClass) * w('classpect');
-			if (active.includes('ap')) score += textMatch(user.ap, charAp) * w('ap');
-			if (active.includes('cep')) score += cepMatch(user.cep, charCep) * w('cep');
-			if (active.includes('ops')) score += opsMatch(user.ops, charOps) * w('ops');
+      return score;
+    }
 
-			return score;
-		}
+    // Render results as cards (with image support)
+    function runSimilarityCheck() {
+      if (!characters || characters.length === 0) {
+        resultsEl.innerHTML = '<p class="error">No character data loaded.</p>';
+        return;
+      }
 
-		function runSimilarityCheck() {
-			if (!characters || characters.length === 0) {
-				resultsEl.innerHTML = '<p class="error">No character data loaded.</p>';
-				return;
-			}
-			const user = {
-				mbti: (document.getElementById('mbti').value || '').trim(),
-				enneagram: (document.getElementById('enneagram').value || '').trim(),
-				socionics: (document.getElementById('socionics').value || '').trim(),
-				neurotype: (document.getElementById('neurotype').value || '').trim(),
-				classpect: (document.getElementById('classpect').value || '').trim(),
-				ap: (document.getElementById('ap').value || '').trim(),
-				cep: (document.getElementById('cep').value || '').trim(),
-				fourletter: (document.getElementById('fourletter').value || '').trim(),
-				ops: (document.getElementById('ops').value || '').trim()
-			};
+      const user = {
+        mbti: (document.getElementById('mbti').value || '').trim(),
+        enneagram: (document.getElementById('enneagram').value || '').trim(),
+        socionics: (document.getElementById('socionics').value || '').trim(),
+        neurotype: (document.getElementById('neurotype').value || '').trim(),
+        classpect: (document.getElementById('classpect').value || '').trim(),
+        ap: (document.getElementById('ap').value || '').trim(),
+        cep: (document.getElementById('cep').value || '').trim(),
+        fourletter: (document.getElementById('fourletter').value || '').trim(),
+        ops: (document.getElementById('ops').value || '').trim()
+      };
 
-			const genreFilterRaw = document.getElementById('genreFilter').value;
-			const genreFilter = genreFilterRaw ? String(genreFilterRaw).trim().toLowerCase() : '';
-			const selectedNotesRaw = document.getElementById('notesFilter').value;
-			const selectedNotes = selectedNotesRaw ? String(selectedNotesRaw).trim().toLowerCase() : '';
+      const genreFilterRaw = document.getElementById('genreFilter').value;
+      const genreFilter = genreFilterRaw ? String(genreFilterRaw).trim().toLowerCase() : '';
+      const selectedNotesRaw = document.getElementById('notesFilter').value;
+      const selectedNotes = selectedNotesRaw ? String(selectedNotesRaw).trim().toLowerCase() : '';
 
-			let filtered = characters.slice();
+      let filtered = characters.slice();
 
-			if (genreFilter) {
-				filtered = filtered.filter(c => {
-					const g = c.genre || c.genres || c.category || '';
-					if (!g) return false;
-					return String(g).toLowerCase().split('/').map(x => x.trim()).some(x => x === genreFilter);
-				});
-			}
+      if (genreFilter) {
+        filtered = filtered.filter(c => {
+          const g = c.genre || c.genres || c.category || '';
+          if (!g) return false;
+          return String(g).toLowerCase().split('/').map(x=>x.trim()).some(x => x === genreFilter);
+        });
+      }
 
-			if (selectedNotes) {
-				filtered = filtered.filter(c => {
-					const notes = c.notes || c.show || c.series || '';
-					if (!notes) return false;
-					const arr = Array.isArray(notes) ? notes : String(notes).split('/');
-					return arr.map(x => String(x).trim().toLowerCase()).includes(selectedNotes);
-				});
-			}
+      if (selectedNotes) {
+        filtered = filtered.filter(c => {
+          const notes = c.notes || c.show || c.series || '';
+          if (!notes) return false;
+          const arr = Array.isArray(notes) ? notes : String(notes).split('/');
+          return arr.map(x => String(x).trim().toLowerCase()).includes(selectedNotes);
+        });
+      }
 
-			if (filtered.length === 0) {
-				resultsEl.innerHTML = '<h2>No Results</h2><p>No characters found matching the selected filters.</p>';
-				return;
-			}
+      if (filtered.length === 0) {
+        resultsEl.innerHTML = '<h2>No Results</h2><p>No characters found matching the selected filters.</p>';
+        return;
+      }
 
-			const scored = filtered.map(c => ({ ...c, similarity: computeScore(user, c) }));
-			scored.sort((a, b) => b.similarity - a.similarity);
-			const top = scored.slice(0, 25);
-			resultsEl.innerHTML = '<h2>Top Matches</h2>' + top.map(c => `
-					<div class="character">
-						<strong>${c.name || 'Unnamed'}</strong> (${c.notes || c.show || 'N/A'}) — ${Math.round((c.similarity || 0) * 100)}%<br>
-						<span class="muted">MBTI: ${c.fourletter || c.mbti4 || 'N/A'}, Saviors: ${c.mbti || c.saviors || 'N/A'}, Enneagram: ${c.enneagram || 'N/A'}, Instinct: ${c.cep || 'N/A'}, Socionics: ${c.socionics || 'N/A'}, OPS: ${c.ops || c.animals || 'N/A'}, Classpect: ${c.classpect || 'N/A'}, Neurotype: ${c.neurotype || 'N/A'}, AP: ${c.ap || 'N/A'}, Genre: ${c.genre || 'N/A'}</span>
-					</div>
-				`).join('');
-		}
+      const scored = filtered.map(c => ({ ...c, similarity: computeScore(user, c) }));
+      scored.sort((a,b)=> b.similarity - a.similarity);
+      const top = scored.slice(0, 25);
 
-		// --- PRESETS: save/load/delete ---
-		const PRESET_KEY = 'character_presets_v1';
+      // Render grid of cards
+      resultsEl.innerHTML = '<h2>Top Matches</h2><div class="character-grid">' +
+        top.map(c => {
+          // pick image from common field names
+          const img = getProp(c, 'image', 'img', 'picture', 'imageUrl', 'url', 'src');
+          const name = c.name || c.character || c.title || 'Unnamed';
+          const showText = c.notes || c.show || c.series || 'N/A';
+          const genreText = c.genre || 'N/A';
+          const four = c.fourletter || c.mbti4 || 'N/A';
+          const funcs = getProp(c, 'mbti', 'saviors', 'function', 'functions', 'func', 'fn') || 'N/A';
+          const opsText = getProp(c, 'ops', 'animals', 'ops_animals', 'animal') || 'N/A';
+          const similarityPct = Math.round((c.similarity || 0) * 100);
 
-		function loadPresetsFromStorage() {
-			try {
-				return JSON.parse(localStorage.getItem(PRESET_KEY) || '[]');
-			} catch (e) {
-				return [];
-			}
-		}
+          return `
+            <div class="character-card" data-name="${escapeHtml(name)}">
+              <div class="char-media">
+                ${ img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` 
+                       : '' }
+                <div class="char-placeholder" style="${img ? 'display:none' : 'display:flex'}">
+                  ${ img ? '' : 'No image' }
+                </div>
+              </div>
+              <div class="character-info">
+                <h3>${escapeHtml(name)}</h3>
+                <div class="meta">${escapeHtml(showText)} — ${escapeHtml(genreText)}</div>
+                <div class="small"><strong>Func:</strong> ${escapeHtml(funcs)} • <strong>4L:</strong> ${escapeHtml(four)} • <strong>Enneagram:</strong> ${escapeHtml(c.enneagram || 'N/A')}</div>
+                <div class="small"><strong>OPS:</strong> ${escapeHtml(opsText)} • <strong>Neuro:</strong> ${escapeHtml(c.neurotype || 'N/A')}</div>
+                <div style="margin-top:10px;font-weight:600;color:#222">${similarityPct}%</div>
+              </div>
+            </div>
+          `;
+        }).join('') +
+      '</div>';
+    }
 
-		function savePresetsToStorage(arr) {
-			localStorage.setItem(PRESET_KEY, JSON.stringify(arr || []));
-		}
+    // simple html-escape for inserted fields
+    function escapeHtml(s){
+      if (s === null || s === undefined) return '';
+      return String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+    }
 
-	function renderPresets() {
-		const arr = loadPresetsFromStorage();
-		presetsContainer.innerHTML = '';
-		if (!arr.length) {
-			presetsContainer.innerHTML = '<div class="muted">No presets saved.</div>';
-			return;
-		}
-		arr.forEach((p, i) => {
-			const row = document.createElement('div');
-			row.className = 'preset-row';
-			const btn = document.createElement('button');
-			btn.textContent = `Preset ${i + 1}: ${p.mbti || '-'} | ${p.fourletter || '-'} | ${p.enneagram || '-'} | ${p.cep || '-'} | ${p.ops || '-'} | ${p.classpect || '-'}`;
-			btn.addEventListener('click', () => loadPreset(p));
-			const del = document.createElement('button');
-			del.textContent = '❌';
-			del.style.background = '#f88';
-			del.style.border = 'none';
-			del.style.borderRadius = '4px';
-			del.addEventListener('click', () => {
-				const updated = loadPresetsFromStorage().filter((_, idx) => idx !== i);
-				savePresetsToStorage(updated);
-				renderPresets();
-			});
-			row.appendChild(btn);
-			row.appendChild(del);
-			presetsContainer.appendChild(row);
-		});
-		// add clear all
-		const clearAll = document.createElement('button');
-		clearAll.textContent = 'Clear All Presets';
-		clearAll.style.marginTop = '8px';
-		clearAll.style.background = '#faa';
-		clearAll.addEventListener('click', () => {
-			if (confirm('Delete ALL presets?')) {
-				localStorage.removeItem(PRESET_KEY);
-				renderPresets();
-			}
-		});
-		presetsContainer.appendChild(clearAll);
-	}
+    // --- PRESETS ---
+    const PRESET_KEY = 'character_presets_v1';
+    function loadPresetsFromStorage(){ try{ return JSON.parse(localStorage.getItem(PRESET_KEY)||'[]'); }catch(e){return [];} }
+    function savePresetsToStorage(arr){ localStorage.setItem(PRESET_KEY, JSON.stringify(arr||[])); }
 
+    function renderPresets(){
+      const arr = loadPresetsFromStorage();
+      presetsContainer.innerHTML = '';
+      if (!arr.length) { presetsContainer.innerHTML = '<div class="muted">No presets saved.</div>'; return; }
+      arr.forEach((p,i) => {
+        const row = document.createElement('div'); row.className='preset-row';
+        const btn = document.createElement('button');
+        btn.textContent = `Preset ${i+1}: ${p.mbti||'-'} | ${p.fourletter||'-'} | ${p.enneagram||'-'} | ${p.ce || p.cep || '-'}`;
+        btn.addEventListener('click', () => loadPreset(p));
+        const del = document.createElement('button');
+        del.textContent = '❌'; del.style.background='#f88'; del.style.border='none'; del.style.borderRadius='4px';
+        del.addEventListener('click', () => { const updated = loadPresetsFromStorage().filter((_,idx)=>idx!==i); savePresetsToStorage(updated); renderPresets(); });
+        row.appendChild(btn); row.appendChild(del); presetsContainer.appendChild(row);
+      });
+      const clearAll = document.createElement('button'); clearAll.textContent='Clear All Presets'; clearAll.style.marginTop='8px'; clearAll.style.background='#faa';
+      clearAll.addEventListener('click', () => { if(confirm('Delete ALL presets?')){ localStorage.removeItem(PRESET_KEY); renderPresets(); } });
+      presetsContainer.appendChild(clearAll);
+    }
 
-		function makePresetFromForm() {
-			const preset = {
-				mbti: (document.getElementById('mbti').value || '').trim(),
-				fourletter: (document.getElementById('fourletter').value || '').trim(),
-				enneagram: (document.getElementById('enneagram').value || '').trim(),
-				socionics: (document.getElementById('socionics').value || '').trim(),
-				neurotype: (document.getElementById('neurotype').value || '').trim(),
-				classpect: (document.getElementById('classpect').value || '').trim(),
-				ap: (document.getElementById('ap').value || '').trim(),
-				cep: (document.getElementById('cep').value || '').trim(),
-				ops: (document.getElementById('ops').value || '').trim()
-			};
-			const arr = loadPresetsFromStorage();
-			arr.push(preset);
-			savePresetsToStorage(arr);
-			renderPresets();
-		}
+    function makePresetFromForm() {
+      const preset = {
+        mbti: (document.getElementById('mbti').value || '').trim(),
+        fourletter: (document.getElementById('fourletter').value || '').trim(),
+        enneagram: (document.getElementById('enneagram').value || '').trim(),
+        socionics: (document.getElementById('socionics').value || '').trim(),
+        neurotype: (document.getElementById('neurotype').value || '').trim(),
+        classpect: (document.getElementById('classpect').value || '').trim(),
+        ap: (document.getElementById('ap').value || '').trim(),
+        cep: (document.getElementById('cep').value || '').trim(),
+        ops: (document.getElementById('ops').value || '').trim()
+      };
+      const arr = loadPresetsFromStorage(); arr.push(preset); savePresetsToStorage(arr); renderPresets();
+    }
 
-		function loadPreset(preset) {
-			document.getElementById('mbti').value = preset.mbti || '';
-			document.getElementById('fourletter').value = preset.fourletter || '';
-			document.getElementById('enneagram').value = preset.enneagram || '';
-			document.getElementById('socionics').value = preset.socionics || '';
-			document.getElementById('neurotype').value = preset.neurotype || '';
-			document.getElementById('classpect').value = preset.classpect || '';
-			document.getElementById('ap').value = preset.ap || '';
-			document.getElementById('cep').value = preset.cep || '';
-			document.getElementById('ops').value = preset.ops || '';
-			// auto-run search after loading
-			try { runSimilarityCheck(); } catch (e) { console.error(e); }
-		}
+    function loadPreset(preset) {
+      document.getElementById('mbti').value = preset.mbti || '';
+      document.getElementById('fourletter').value = preset.fourletter || '';
+      document.getElementById('enneagram').value = preset.enneagram || '';
+      document.getElementById('socionics').value = preset.socionics || '';
+      document.getElementById('neurotype').value = preset.neurotype || '';
+      document.getElementById('classpect').value = preset.classpect || '';
+      document.getElementById('ap').value = preset.ap || '';
+      document.getElementById('cep').value = preset.cep || '';
+      document.getElementById('ops').value = preset.ops || '';
+      try { runSimilarityCheck(); } catch(e){ console.error(e); }
+    }
 
-		// Attach event listeners
-		findBtn.addEventListener('click', () => {
-			try {
-				runSimilarityCheck();
-			} catch (err) {
-				console.error('runSimilarityCheck error:', err);
-				resultsEl.innerHTML = '<p class="error">Error running search — see console for details.</p>';
-			}
-		});
-		savePresetBtn.addEventListener('click', makePresetFromForm);
+    // event listeners
+    findBtn.addEventListener('click', () => {
+      try { runSimilarityCheck(); } catch (err) { console.error('runSimilarityCheck error:', err); resultsEl.innerHTML = '<p class="error">Error running search — see console.</p>'; }
+    });
+    savePresetBtn.addEventListener('click', makePresetFromForm);
+    document.addEventListener('DOMContentLoaded', renderPresets);
 
-		// Render presets on DOM ready (even before characters loaded)
-		document.addEventListener('DOMContentLoaded', renderPresets);
-	</script>
-
+  </script>
 </body>
 </html>
