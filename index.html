@@ -196,6 +196,8 @@
         <button type="button" id="savePresetBtn">Save Preset</button>
 
         <div class="presets" id="presetsContainer"></div>
+		
+		
 
         <h3>Scoring Toggles</h3>
         <label><input type="checkbox" id="useMbti" checked> Use MBTI (w/ Jumpers)</label>
@@ -511,7 +513,8 @@
               <div class="character-info">
                 <h3>${escapeHtml(name)}</h3>
                 <div class="meta">${escapeHtml(showText)} — ${escapeHtml(genreText)}</div>
-                <div class="small"><strong>Func:</strong> ${escapeHtml(funcs)} • <strong>4L:</strong> ${escapeHtml(four)} • <strong>Enneagram:</strong> ${escapeHtml(c.enneagram || 'N/A')}</div>
+                <div class="small"><strong>Func:</strong> ${escapeHtml(funcs)} • <strong>4L:</strong> ${escapeHtml(four)} </div>
+				<div class="small"><strong>Enneagram:</strong> ${escapeHtml(c.cep || 'N/A')} <strong> AP:</strong> ${escapeHtml(c.ap || 'N/A')}</div>
                 <div class="small"><strong>OPS:</strong> ${escapeHtml(opsText)} • <strong>Neuro:</strong> ${escapeHtml(c.neurotype || 'N/A')}</div>
                 <div style="margin-top:10px;font-weight:600;color:#222">${similarityPct}%</div>
               </div>
