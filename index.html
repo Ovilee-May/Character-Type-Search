@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Character Similarity Finder — Debuggable + Presets + Images</title>
+  <title>Character Similarity Finder — Supabase + Images + Filters</title>
   <style>
     /* Grid / card styles */
     .character-grid {
@@ -196,8 +196,6 @@
         <button type="button" id="savePresetBtn">Save Preset</button>
 
         <div class="presets" id="presetsContainer"></div>
-		
-		
 
         <h3>Scoring Toggles</h3>
         <label><input type="checkbox" id="useMbti" checked> Use MBTI (w/ Jumpers)</label>
@@ -209,6 +207,12 @@
         <label><input type="checkbox" id="useOps" checked> Use OPS Animals</label>
         <label><input type="checkbox" id="useAp" checked> Use Attitudinal Psyche</label>
         <label><input type="checkbox" id="useCep" checked> Use Enneagram Instinct</label>
+
+        <h3>Exclude</h3>
+        <label><input type="checkbox" id="excludeSide"> Exclude side / supporting characters</label>
+        <label><input type="checkbox" id="excludeMC"> Exclude main characters / MCs</label>
+        <label><input type="checkbox" id="excludeVillain"> Exclude villains / antagonists</label>
+
       </form>
     </div>
 
@@ -216,6 +220,48 @@
       <div id="results" class="results"></div>
     </div>
   </div>
+
+  <!-- Supabase client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Supabase config (as requested)
+    const SUPABASE_URL = "https://gmfkzzswgpewnylyceii.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtZmt6enN3Z3Bld255bHljZWlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODEyNzEsImV4cCI6MjA3ODU1NzI3MX0.pYWxDWYRDRNjrWGZJsM9KuW8cMWw_OktrRmlknAvOk0";
+
+    // create the client
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // load rows from your Supabase table named "characters" (change if your table name differs)
+    async function loadCharacters() {
+      try {
+        setStatus('Loading characters from Supabase...');
+        const { data, error } = await supabaseClient
+          .from('characters')
+          .select('*')
+          .order('name', { ascending: true });
+
+        if (error) {
+          console.error('Supabase error', error);
+          setStatus('Error loading from Supabase (see console)', true);
+          return;
+        }
+        // data is an array
+        characters = Array.isArray(data) ? data : [];
+        setStatus('Characters loaded: ' + characters.length + '. Ready.');
+        // populate UI controls
+        populateNotesFilter();
+        populateGenreFilter();
+        renderPresets();
+        document.getElementById('findBtn').disabled = false;
+      } catch (e) {
+        console.error(e);
+        setStatus('Unexpected error loading characters', true);
+      }
+    }
+
+    // fire the loader
+    loadCharacters();
+  </script>
 
   <script>
     // basic refs
@@ -240,33 +286,6 @@
     }
 
     let characters = [];
-
-    // load characters.json (served from your project)
-    fetch('characters.json?nocache=' + Date.now())
-      .then(res => {
-        if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText);
-        return res.json();
-      })
-      .then(data => {
-        if (!Array.isArray(data)) {
-          console.warn('characters.json returned non-array; continuing with []');
-          characters = Array.isArray(data) ? data : [];
-          setStatus('Loaded data but format unexpected; continuing.', true);
-        } else {
-          characters = data;
-          setStatus('Characters loaded: ' + characters.length + '. Ready.');
-        }
-        populateNotesFilter();
-        populateGenreFilter();
-        findBtn.disabled = false;
-        renderPresets();
-      })
-      .catch(err => {
-        console.error('Error loading characters.json:', err);
-        setStatus('Error loading characters.json — open console for details.', true);
-        resultsEl.innerHTML = '<p class="error">Error loading characters.json: ' + (err.message || err) + '</p>';
-        findBtn.disabled = true;
-      });
 
     const neuroGrid = {
       "Computer": [0,0],"Analyst":[1,0],"Fascinator":[2,0],"Newtype":[3,0],
@@ -333,7 +352,7 @@
       return 0;
     }
 
-    // OPS match: ORDER-SENSITIVE
+    // OPS match: ORDER-SENSITIVE (user requested order matters)
     // exact same order => 1
     // otherwise score = number of animals matching in same slot / max length
     function opsMatch(u, c) {
@@ -436,6 +455,27 @@
       return score;
     }
 
+    // heuristics for role detection (used by exclude toggles)
+    function isSideCharacter(c) {
+      // check explicit booleans
+      if (c.is_side === true || c.is_supporting === true || c.is_minor === true) return true;
+      const r = (getProp(c,'role','roles','type','tags','tag') || '').toString().toLowerCase();
+      if (!r) return false;
+      return r.includes('side') || r.includes('support') || r.includes('minor') || r.includes('supporting');
+    }
+    function isMainCharacter(c) {
+      if (c.is_main === true || c.is_protagonist === true || c.is_lead === true) return true;
+      const r = (getProp(c,'role','roles','type','tags','tag') || '').toString().toLowerCase();
+      if (!r) return false;
+      return r.includes('main') || r.includes('protagonist') || r.includes('lead') || r.includes('mc') || r.includes('player');
+    }
+    function isVillainCharacter(c) {
+      if (c.is_villain === true || c.is_antagonist === true) return true;
+      const r = (getProp(c,'role','roles','type','tags','tag') || '').toString().toLowerCase();
+      if (!r) return false;
+      return r.includes('villain') || r.includes('antagonist') || r.includes('enemy');
+    }
+
     // Render results as cards (with image support)
     function runSimilarityCheck() {
       if (!characters || characters.length === 0) {
@@ -462,6 +502,7 @@
 
       let filtered = characters.slice();
 
+      // apply genre / notes filters
       if (genreFilter) {
         filtered = filtered.filter(c => {
           const g = c.genre || c.genres || c.category || '';
@@ -469,7 +510,6 @@
           return String(g).toLowerCase().split('/').map(x=>x.trim()).some(x => x === genreFilter);
         });
       }
-
       if (selectedNotes) {
         filtered = filtered.filter(c => {
           const notes = c.notes || c.show || c.series || '';
@@ -479,11 +519,17 @@
         });
       }
 
+      // apply exclude toggles
+      if (document.getElementById('excludeSide').checked) filtered = filtered.filter(c => !isSideCharacter(c));
+      if (document.getElementById('excludeMC').checked) filtered = filtered.filter(c => !isMainCharacter(c));
+      if (document.getElementById('excludeVillain').checked) filtered = filtered.filter(c => !isVillainCharacter(c));
+
       if (filtered.length === 0) {
         resultsEl.innerHTML = '<h2>No Results</h2><p>No characters found matching the selected filters.</p>';
         return;
       }
 
+      // score & sort
       const scored = filtered.map(c => ({ ...c, similarity: computeScore(user, c) }));
       scored.sort((a,b)=> b.similarity - a.similarity);
       const top = scored.slice(0, 25);
@@ -501,11 +547,11 @@
           const opsText = getProp(c, 'ops', 'animals', 'ops_animals', 'animal') || 'N/A';
           const similarityPct = Math.round((c.similarity || 0) * 100);
 
+          // inline safe HTML; escape values
           return `
             <div class="character-card" data-name="${escapeHtml(name)}">
               <div class="char-media">
-                ${ img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` 
-                       : '' }
+                ${ img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '' }
                 <div class="char-placeholder" style="${img ? 'display:none' : 'display:flex'}">
                   ${ img ? '' : 'No image' }
                 </div>
@@ -513,8 +559,8 @@
               <div class="character-info">
                 <h3>${escapeHtml(name)}</h3>
                 <div class="meta">${escapeHtml(showText)} — ${escapeHtml(genreText)}</div>
-                <div class="small"><strong>Func:</strong> ${escapeHtml(funcs)} • <strong>4L:</strong> ${escapeHtml(four)} </div>
-				<div class="small"><strong>Enneagram:</strong> ${escapeHtml(c.cep || 'N/A')} <strong> AP:</strong> ${escapeHtml(c.ap || 'N/A')}</div>
+                <div class="small"><strong>Func:</strong> ${escapeHtml(funcs)} • <strong>4L:</strong> ${escapeHtml(four)}</div>
+                <div class="small"><strong>Instinct:</strong> ${escapeHtml(c.cep || 'N/A')} • <strong>AP:</strong> ${escapeHtml(c.ap || 'N/A')}</div>
                 <div class="small"><strong>OPS:</strong> ${escapeHtml(opsText)} • <strong>Neuro:</strong> ${escapeHtml(c.neurotype || 'N/A')}</div>
                 <div style="margin-top:10px;font-weight:600;color:#222">${similarityPct}%</div>
               </div>
@@ -542,7 +588,7 @@
       arr.forEach((p,i) => {
         const row = document.createElement('div'); row.className='preset-row';
         const btn = document.createElement('button');
-        btn.textContent = `Preset ${i+1}: ${p.mbti||'-'} | ${p.fourletter||'-'} | ${p.enneagram||'-'} | ${p.ce || p.cep || '-'}`;
+        btn.textContent = `Preset ${i+1}: ${p.mbti||'-'} | ${p.fourletter||'-'} | ${p.enneagram||'-'} | ${p.cep||'-'}`;
         btn.addEventListener('click', () => loadPreset(p));
         const del = document.createElement('button');
         del.textContent = '❌'; del.style.background='#f88'; del.style.border='none'; del.style.borderRadius='4px';
