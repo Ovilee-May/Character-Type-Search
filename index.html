@@ -231,6 +231,10 @@
     // create the client
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.className = isError ? 'status error' : 'status';
+    }
     // load rows from your Supabase table named "characters" (change if your table name differs)
     async function loadCharacters() {
       try {
