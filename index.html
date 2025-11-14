@@ -2,109 +2,324 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Character Similarity Finder — Supabase + Images + Filters</title>
+  <title>Character Similarity Finder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    /* Grid / card styles */
+    /* ====== VARIABLES ====== */
+    :root {
+      --bg-color: #0f0f10;
+      --panel-bg: #161616;
+      --panel-border: #2a2a2a;
+      --text-color: #e5e5e5;
+      --text-muted: #aaa;
+      --accent: #36e3ff;
+      --accent-gradient: linear-gradient(135deg, #36e3ff, #6b7dff);
+      --input-bg: #1c1c1d;
+      --input-border: #2c2c2c;
+      --card-bg: #1a1a1a;
+    }
+
+    /* ====== THEMES ====== */
+    .theme-light {
+      --bg-color: #f9f9f9;
+      --panel-bg: #ffffff;
+      --panel-border: #cccccc;
+      --text-color: #1a1a1a;
+      --text-muted: #555;
+      --accent: #4f46e5;
+      --accent-gradient: linear-gradient(135deg, #4f46e5, #6366f1);
+      --input-bg: #f1f1f1;
+      --input-border: #ddd;
+      --card-bg: #fefefe;
+    }
+
+    .theme-ttrpg {
+      --bg-color: #2a1f14;
+      --panel-bg: #3a2a1e;
+      --panel-border: #5a422f;
+      --text-color: #f3e4c5;
+      --text-muted: #cbb48d;
+      --accent: #b58a5b;
+      --accent-gradient: linear-gradient(135deg, #b58a5b, #eacda3);
+      --input-bg: #4a3a2a;
+      --input-border: #b58a5b;
+      --card-bg: #3a2a1e;
+      background-image: radial-gradient(#3a2a1e 1px, transparent 1px),
+                        radial-gradient(#3a2a1e 1px, transparent 1px);
+      background-size: 40px 40px;
+      background-position: 0 0, 20px 20px;
+    }
+
+    .theme-cyberpunk {
+      --bg-color: #0a0c1f;
+      --panel-bg: #12142b;
+      --panel-border: #2a2d4f;
+      --text-color: #c0ffee;
+      --text-muted: #6df2ff;
+      --accent: #ff00a0;
+      --accent-gradient: linear-gradient(135deg, #ff00a0, #00ffff);
+      --input-bg: #1a1c3a;
+      --input-border: #303360;
+      --card-bg: #151733;
+      background: linear-gradient(135deg, #0a0c1f, #12142b);
+    }
+
+    /* ====== CORE ====== */
+    body {
+      margin: 0;
+      font-family: "Inter", sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      transition: background 0.5s ease, color 0.5s ease;
+    }
+
+    h1, h2, h3 {
+      color: var(--text-color);
+    }
+
+	.status {
+	  text-align: center;
+	  width: 100%;
+	  margin-left: 0;
+	  margin-right: 0;
+	}
+	
+	.theme-selector {
+	  display: flex;
+	  justify-content: center;
+	  width: 100%;
+	}
+
+
+
+	h1 {
+	  text-align: center;
+	  width: 100%;
+	}
+
+
+    a { color: var(--accent); }
+
+    .container {
+      display: flex;
+      gap: 32px;
+      padding: 40px 60px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+
+    /* ====== PANELS ====== */
+    .form-column, .results-column {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.4);
+      transition: background 0.5s ease, border-color 0.5s ease;
+    }
+
+    .form-column { flex: 1; min-width: 320px; }
+    .results-column { flex: 2; min-width: 500px; }
+
+    /* ====== INPUTS ====== */
+    label {
+      display: block;
+      margin-top: 16px;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-color);
+      font-size: 0.9rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: #222;
+    }
+
+    button {
+      margin-top: 18px;
+      padding: 10px 16px;
+      background: var(--accent-gradient);
+      color: var(--bg-color);
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 12px var(--accent);
+    }
+
+    /* ====== CARDS ====== */
     .character-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
+      gap: 24px;
+      margin-top: 24px;
     }
-    .character-card {
-      background-color: #f9f9fb;
-      border-radius: 15px;
-      padding: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      text-align: left;
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
-      display: flex;
-      flex-direction: column;
-      min-height: 320px;
-      overflow: hidden;
-    }
-    .character-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
 
-    .char-media {
-      width: 100%;
-      height: 200px;
+    .character-card {
+      background: var(--card-bg);
+      border: 1px solid var(--panel-border);
       border-radius: 10px;
       overflow: hidden;
-      background: linear-gradient(180deg,#e9e9ef,#f6f6fa);
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-direction: column;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s;
+      cursor: pointer;
+      position: relative;
     }
+
+    .character-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 0 18px rgba(54, 227, 255, 0.2);
+    }
+
     .char-media img {
       width: 100%;
-      height: 100%;
+      height: 180px;
       object-fit: cover;
-      display:block;
-    }
-    .char-placeholder {
-      width: 100%;
-      height: 100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#777;
-      font-size:14px;
-      padding:10px;
-      box-sizing:border-box;
     }
 
     .character-info {
-      padding-top: 10px;
+      padding: 14px;
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .character-info h3 {
-      margin: 0 0 6px;
-      font-size: 1.05rem;
-      color: #222;
-    }
+
     .character-info .meta {
-      color:#555;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .similarity-bar {
+      height: 5px;
+      background: var(--panel-border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .similarity-bar-inner {
+      height: 100%;
+      width: 0%;
+      background: var(--accent-gradient);
+      transition: width 0.5s ease;
+    }
+
+    .theme-toggle {
+      background: var(--accent);
+      color: var(--bg-color);
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 10px 60px;
+      font-weight: 600;
+    }
+
+    .status {
+      margin: 10px 60px;
       font-size: 0.9rem;
-      margin-bottom:8px;
-    }
-    .character-info .small {
-      color:#666;
-      font-size:0.85rem;
-      line-height:1.25;
+      color: var(--text-muted);
     }
 
-    /* Rest of page styles */
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto; margin: 20px; color: #111; }
-    label { display:block; margin-top:12px; font-size:14px; }
-    select,input { margin-top:6px; padding:8px; width:320px; max-width:100%; }
-    button { margin-top:12px; padding:10px 14px; border-radius:8px; cursor:pointer; }
-    .results { margin-top:22px; max-width:1100px; }
-    .muted { color:#666; font-size:13px; }
-    .status { margin-top:10px; color:#555; }
-    .error { color:#b00020; }
-
-    .container { display:flex; gap:40px; align-items:flex-start; }
-    .form-column { flex:1; max-width:540px; }
-    .results-column { flex:2; }
-
-    .presets { margin-top:12px; }
-    .preset-row { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
-    .preset-row button { margin:0; }
-
-    @media (max-width: 880px) {
-      .container { flex-direction: column; }
-      select,input { width:100%; }
+    .status.error {
+      color: #ff5050;
     }
+	
+		/* ====== FIX SELECT DROPDOWN ====== */
+	select {
+	  -webkit-appearance: none;
+	  -moz-appearance: none;
+	  appearance: none;
+	  background-color: var(--input-bg);
+	  color: var(--text-color);
+	  border: 1px solid var(--input-border);
+	  padding: 10px 12px;
+	  border-radius: 6px;
+	  font-size: 0.9rem;
+	  cursor: pointer;
+	}
+
+	select option {
+	  background-color: var(--input-bg);
+	  color: var(--text-color);
+	}
+
+	/* optional: add a little custom arrow */
+	select::-ms-expand { display: none; }
+	select::after {
+	  content: "▼";
+	  position: absolute;
+	  right: 12px;
+	  pointer-events: none;
+	  color: var(--text-muted);
+	}
+
+	.char-placeholder {
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  height: 180px; /* same as your img height */
+	  background: #222; /* dark background to match theme */
+	  color: var(--text-muted);
+	  font-weight: 600;
+	  font-size: 1rem;
+	  border-radius: 6px 6px 0 0; /* round the top corners like the image */
+	  text-align: center;
+	}
+
+	.char-placeholder::before {
+	  content: "🖼️"; /* optional icon for visual flair */
+	  display: block;
+	  font-size: 2rem;
+	  margin-bottom: 6px;
+	}
+
+
   </style>
 </head>
+
+
+
 <body>
 
   <h1>Find Your Most Similar Characters</h1>
   <div class="status" id="status">Loading characters...</div>
 
+	<div class="theme-selector">
+	  <button class="theme-toggle" onclick="cycleTheme()">Change Theme</button>
+	</div>
+
+
+
   <div class="container">
     <div class="form-column">
       <form id="testForm" onsubmit="return false;">
+	  
+		<label>Search by Name</label>
+		<input type="text" id="nameSearch" placeholder="Enter character name...">
+
         <label>MBTI (function pair)</label>
         <select id="mbti">
           <option value="">— any —</option>
@@ -184,6 +399,10 @@
 
         <label>Attitudinal Psyche</label>
         <input id="ap" type="text" placeholder="e.g. FEVL">
+		
+		<label>5-Scale Type (e.g. +DEP +ENG)</label>
+		<input id="fivecode" type="text" placeholder="+DEP +ENG">
+
 
         <label>Genre (filter)</label>
         <select id="genreFilter"><option value="">All</option></select>
@@ -194,8 +413,13 @@
         <br>
         <button type="button" id="findBtn" disabled>Find Matches</button>
         <button type="button" id="savePresetBtn">Save Preset</button>
+		<button type="button" id="clearBtn" style="background:#444;">Clear</button>
+
+
 
         <div class="presets" id="presetsContainer"></div>
+
+
 
         <h3>Scoring Toggles</h3>
         <label><input type="checkbox" id="useMbti" checked> Use MBTI (w/ Jumpers)</label>
@@ -206,7 +430,11 @@
         <label><input type="checkbox" id="useClasspect" checked> Use Classpect</label>
         <label><input type="checkbox" id="useOps" checked> Use OPS Animals</label>
         <label><input type="checkbox" id="useAp" checked> Use Attitudinal Psyche</label>
+		<label><input type="checkbox" id="useFivecode" checked> Use 5-Scale Typology</label>
+
+		
         <label><input type="checkbox" id="useCep" checked> Use Enneagram Instinct</label>
+
 
         <h3>Exclude</h3>
         <label><input type="checkbox" id="excludeSide"> Exclude side / supporting characters</label>
@@ -221,54 +449,59 @@
     </div>
   </div>
 
-  <!-- Supabase client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    // Supabase config (as requested)
-    const SUPABASE_URL = "https://gmfkzzswgpewnylyceii.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtZmt6enN3Z3Bld255bHljZWlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODEyNzEsImV4cCI6MjA3ODU1NzI3MX0.pYWxDWYRDRNjrWGZJsM9KuW8cMWw_OktrRmlknAvOk0";
 
-    // create the client
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    function setStatus(msg, isError = false) {
-      statusEl.textContent = msg;
-      statusEl.className = isError ? 'status error' : 'status';
-    }
-    // load rows from your Supabase table named "characters" (change if your table name differs)
-    async function loadCharacters() {
-      try {
-        setStatus('Loading characters from Supabase...');
-        const { data, error } = await supabaseClient
-          .from('characters')
-          .select('*')
-          .order('name', { ascending: true });
-
-        if (error) {
-          console.error('Supabase error', error);
-          setStatus('Error loading from Supabase (see console)', true);
-          return;
-        }
-        // data is an array
-        characters = Array.isArray(data) ? data : [];
-        setStatus('Characters loaded: ' + characters.length + '. Ready.');
-        // populate UI controls
-        populateNotesFilter();
-        populateGenreFilter();
-        renderPresets();
-        document.getElementById('findBtn').disabled = false;
-      } catch (e) {
-        console.error(e);
-        setStatus('Unexpected error loading characters', true);
-      }
-    }
-
-    // fire the loader
-    loadCharacters();
-  </script>
 
   <script>
-    // basic refs
+  
+    const themes = ["theme-light", "theme-ttrpg", "theme-cyberpunk"];
+    let currentTheme = 0;
+
+
+	function clearFormFields() {
+	  const form = document.getElementById('testForm');
+
+	  // Reset text inputs and selects
+	  form.querySelectorAll('input[type="text"], select').forEach(el => {
+		el.value = '';
+	  });
+
+	  // Reset checkboxes to unchecked
+	  form.querySelectorAll('input[type="checkbox"]').forEach(el => {
+		el.checked = false;
+	  });
+
+	  // Re-enable the default scoring toggles to whatever you want
+	  // (You can remove this block if you want them all off instead.)
+	  document.getElementById('useMbti').checked = true;
+	  document.getElementById('use4Letter').checked = true;
+	  document.getElementById('useEnneagram').checked = true;
+	  document.getElementById('useSocionics').checked = true;
+	  document.getElementById('useNeurotype').checked = true;
+	  document.getElementById('useClasspect').checked = true;
+	  document.getElementById('useOps').checked = true;
+	  document.getElementById('useAp').checked = true;
+	  document.getElementById('useCep').checked = true;
+	document.getElementById('useFivecode').checked = true;
+
+
+	  // Clear search results so the user has visual feedback
+	  resultsEl.innerHTML = '';
+
+	  // Optional UI status update
+	  setStatus("Form cleared.");
+	}
+
+	// hook up the button
+	document.getElementById('clearBtn').addEventListener('click', clearFormFields);
+
+    function cycleTheme() {
+      document.body.classList.remove(...themes);
+      currentTheme = (currentTheme + 1) % themes.length;
+      document.body.classList.add(themes[currentTheme]);
+    }
+
+    document.body.classList.add(themes[currentTheme]);
+
     const statusEl = document.getElementById('status');
     const resultsEl = document.getElementById('results');
     const findBtn = document.getElementById('findBtn');
@@ -280,7 +513,6 @@
       statusEl.className = isError ? 'status error' : 'status';
     }
 
-    // helper to get property values from character objects with multiple possible keys
     function getProp(obj, ...keys) {
       for (const k of keys) {
         if (!k) continue;
@@ -335,7 +567,6 @@
         .forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
     }
 
-    // parse function pair robustly (accepts Ni/Fe, NiFe, Ni Fe, or your 'saviors' strings)
     function parsePair(raw) {
       if (!raw) return [];
       const s = String(raw).trim();
@@ -356,9 +587,7 @@
       return 0;
     }
 
-    // OPS match: ORDER-SENSITIVE (user requested order matters)
-    // exact same order => 1
-    // otherwise score = number of animals matching in same slot / max length
+
     function opsMatch(u, c) {
       if (!u || !c) return 0;
       const U = String(u).trim().toUpperCase();
@@ -414,50 +643,70 @@
     }
 
     // computeScore (flexible property names)
-    function computeScore(user, char) {
-      const charMbti = getProp(char, 'mbti', 'saviors', 'function', 'functions', 'func', 'fn');
-      const charFour = getProp(char, 'fourletter', 'four', 'mbti4');
-      const charEnn = getProp(char, 'enneagram', 'ennea');
-      const charSoc = getProp(char, 'socionics', 'soc');
-      const charNeuro = getProp(char, 'neurotype', 'neuro');
-      const charClass = getProp(char, 'classpect', 'class');
-      const charAp = getProp(char, 'ap', 'attitudinal', 'attitude');
-      const charCep = getProp(char, 'cep', 'instinct');
-      const charOps = getProp(char, 'ops', 'animals', 'ops_animals', 'animal');
+	function computeScore(user, char) {
+	  const charMbti = getProp(char, 'mbti', 'saviors', 'function', 'functions', 'func', 'fn');
+	  const charFour = getProp(char, 'fourletter', 'four', 'mbti4');
+	  const charEnn = getProp(char, 'enneagram', 'ennea');
+	  const charSoc = getProp(char, 'socionics', 'soc');
+	  const charNeuro = getProp(char, 'neurotype', 'neuro');
+	  const charClass = getProp(char, 'classpect', 'class');
+	  const charAp = getProp(char, 'ap', 'attitudinal', 'attitude');
+	  const charCep = getProp(char, 'cep', 'instinct');
+	  const charOps = getProp(char, 'ops', 'animals', 'ops_animals', 'animal');
+	  const charFive  = getProp(char, 'fivecode', '5code', '5Code', 'span5', 'scale5');
 
-      const weights = {
-        mbti: 0.30, fourletter: 0.20, enneagram: 0.12, socionics: 0.08,
-        neurotype: 0.10, classpect: 0.05, ap: 0.05, cep: 0.05, ops: 0.05
-      };
 
-      const active = [];
-      if (document.getElementById('useMbti').checked) active.push('mbti');
-      if (document.getElementById('use4Letter').checked) active.push('fourletter');
-      if (document.getElementById('useEnneagram').checked) active.push('enneagram');
-      if (document.getElementById('useSocionics').checked) active.push('socionics');
-      if (document.getElementById('useNeurotype').checked) active.push('neurotype');
-      if (document.getElementById('useClasspect').checked) active.push('classpect');
-      if (document.getElementById('useAp').checked) active.push('ap');
-      if (document.getElementById('useCep').checked) active.push('cep');
-      if (document.getElementById('useOps').checked) active.push('ops');
+	  const weights = {
+		mbti: 0.25, fourletter: 0.15, enneagram: 0.10, socionics: 0.08,
+		neurotype: 0.10, classpect: 0.05, ap: 0.05, cep: 0.05, ops: 0.05, 
+		fivecode: 0.10,
+	  };
 
-      if (active.length === 0) return 0;
-      const total = active.reduce((s,k)=> s + (weights[k]||0), 0) || 1;
-      const w = k => (weights[k]||0)/total;
+	  const active = [];
+	  if (document.getElementById('useMbti').checked) active.push('mbti');
+	  if (document.getElementById('use4Letter').checked) active.push('fourletter');
+	  if (document.getElementById('useEnneagram').checked) active.push('enneagram');
+	  if (document.getElementById('useSocionics').checked) active.push('socionics');
+	  if (document.getElementById('useNeurotype').checked) active.push('neurotype');
+	  if (document.getElementById('useClasspect').checked) active.push('classpect');
+	  if (document.getElementById('useAp').checked) active.push('ap');
+	  if (document.getElementById('useCep').checked) active.push('cep');
+	  if (document.getElementById('useOps').checked) active.push('ops');
+	  if (document.getElementById('useFivecode').checked) active.push('fivecode');
 
-      let score = 0;
-      if (active.includes('mbti')) score += mbtiPairScore(user.mbti, charMbti) * w('mbti');
-      if (active.includes('fourletter')) score += fourLetterMatch(user.fourletter, charFour) * w('fourletter');
-      if (active.includes('enneagram')) score += enneagramMatch(user.enneagram, charEnn) * w('enneagram');
-      if (active.includes('socionics')) score += textMatch(user.socionics, charSoc) * w('socionics');
-      if (active.includes('neurotype')) score += neurotypeScore(user.neurotype, charNeuro) * w('neurotype');
-      if (active.includes('classpect')) score += textMatch(user.classpect, charClass) * w('classpect');
-      if (active.includes('ap')) score += textMatch(user.ap, charAp) * w('ap');
-      if (active.includes('cep')) score += cepMatch(user.cep, charCep) * w('cep');
-      if (active.includes('ops')) score += opsMatch(user.ops, charOps) * w('ops');
 
-      return score;
-    }
+	  const totalWeight = active.reduce((s,k)=> s + (weights[k]||0), 0) || 1;
+	  const w = k => (weights[k]||0)/totalWeight;
+
+	  let score = 0;
+	  if (active.includes('mbti')) score += mbtiPairScore(user.mbti, charMbti) * w('mbti');
+	  if (active.includes('fourletter')) score += fourLetterMatch(user.fourletter, charFour) * w('fourletter');
+	  if (active.includes('enneagram')) score += enneagramMatch(user.enneagram, charEnn) * w('enneagram');
+	  if (active.includes('socionics')) score += textMatch(user.socionics, charSoc) * w('socionics');
+	  if (active.includes('neurotype')) score += neurotypeScore(user.neurotype, charNeuro) * w('neurotype');
+	  if (active.includes('classpect')) score += textMatch(user.classpect, charClass) * w('classpect');
+	  if (active.includes('ap')) score += textMatch(user.ap, charAp) * w('ap');
+	  if (active.includes('cep')) score += cepMatch(user.cep, charCep) * w('cep');
+	  if (active.includes('ops')) score += opsMatch(user.ops, charOps) * w('ops');
+	  if (active.includes('fivecode')) score += fivecodeMatch(user.fivecode, charFive) * w('fivecode');
+
+	  return score;
+	}
+
+	function fivecodeMatch(user, char) {
+	  if (!user || !char) return 0;
+
+	  const u = user.toUpperCase().trim().split(/\s+/);
+	  const c = char.toUpperCase().trim().split(/\s+/);
+
+	  if (u.length !== 2 || c.length !== 2) return 0;
+
+	  let matches = 0;
+	  if (u[0] === c[0]) matches++;
+	  if (u[1] === c[1]) matches++;
+
+	  return matches / 2;  // 1.0 = perfect match, 0.5 = partial, 0 = mismatch
+	}
 
     // heuristics for role detection (used by exclude toggles)
     function isSideCharacter(c) {
@@ -487,6 +736,7 @@
         return;
       }
 
+
       const user = {
         mbti: (document.getElementById('mbti').value || '').trim(),
         enneagram: (document.getElementById('enneagram').value || '').trim(),
@@ -496,7 +746,8 @@
         ap: (document.getElementById('ap').value || '').trim(),
         cep: (document.getElementById('cep').value || '').trim(),
         fourletter: (document.getElementById('fourletter').value || '').trim(),
-        ops: (document.getElementById('ops').value || '').trim()
+        ops: (document.getElementById('ops').value || '').trim(),
+		fivecode: (document.getElementById('fivecode').value || '').trim(),
       };
 
       const genreFilterRaw = document.getElementById('genreFilter').value;
@@ -522,6 +773,15 @@
           return arr.map(x => String(x).trim().toLowerCase()).includes(selectedNotes);
         });
       }
+	  
+	  const nameQuery = document.getElementById('nameSearch').value.trim().toLowerCase();
+		if (nameQuery) {
+		  filtered = filtered.filter(c => {
+			const name = c.name || c.character || c.title || '';
+			return name.toLowerCase().includes(nameQuery);
+		  });
+		}
+
 
       // apply exclude toggles
       if (document.getElementById('excludeSide').checked) filtered = filtered.filter(c => !isSideCharacter(c));
@@ -566,7 +826,11 @@
                 <div class="small"><strong>Func:</strong> ${escapeHtml(funcs)} • <strong>4L:</strong> ${escapeHtml(four)}</div>
                 <div class="small"><strong>Instinct:</strong> ${escapeHtml(c.cep || 'N/A')} • <strong>AP:</strong> ${escapeHtml(c.ap || 'N/A')}</div>
                 <div class="small"><strong>OPS:</strong> ${escapeHtml(opsText)} • <strong>Neuro:</strong> ${escapeHtml(c.neurotype || 'N/A')}</div>
+				<div class="small"><strong>5Span:</strong> ${escapeHtml(c["5Code"] || 'N/A')}</div>
                 <div style="margin-top:10px;font-weight:600;color:#222">${similarityPct}%</div>
+				<div class="similarity-bar">
+				  <div class="similarity-bar-inner" style="width:${similarityPct}%"></div>
+				</div>
               </div>
             </div>
           `;
@@ -580,65 +844,167 @@
       return String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
     }
 
-    // --- PRESETS ---
-    const PRESET_KEY = 'character_presets_v1';
-    function loadPresetsFromStorage(){ try{ return JSON.parse(localStorage.getItem(PRESET_KEY)||'[]'); }catch(e){return [];} }
-    function savePresetsToStorage(arr){ localStorage.setItem(PRESET_KEY, JSON.stringify(arr||[])); }
+// --- PRESETS ---
+const PRESET_KEY = 'character_presets_v1';
 
-    function renderPresets(){
-      const arr = loadPresetsFromStorage();
-      presetsContainer.innerHTML = '';
-      if (!arr.length) { presetsContainer.innerHTML = '<div class="muted">No presets saved.</div>'; return; }
-      arr.forEach((p,i) => {
-        const row = document.createElement('div'); row.className='preset-row';
-        const btn = document.createElement('button');
-        btn.textContent = `Preset ${i+1}: ${p.mbti||'-'} | ${p.fourletter||'-'} | ${p.enneagram||'-'} | ${p.cep||'-'}`;
-        btn.addEventListener('click', () => loadPreset(p));
-        const del = document.createElement('button');
-        del.textContent = '❌'; del.style.background='#f88'; del.style.border='none'; del.style.borderRadius='4px';
-        del.addEventListener('click', () => { const updated = loadPresetsFromStorage().filter((_,idx)=>idx!==i); savePresetsToStorage(updated); renderPresets(); });
-        row.appendChild(btn); row.appendChild(del); presetsContainer.appendChild(row);
-      });
-      const clearAll = document.createElement('button'); clearAll.textContent='Clear All Presets'; clearAll.style.marginTop='8px'; clearAll.style.background='#faa';
-      clearAll.addEventListener('click', () => { if(confirm('Delete ALL presets?')){ localStorage.removeItem(PRESET_KEY); renderPresets(); } });
-      presetsContainer.appendChild(clearAll);
-    }
+function loadPresetsFromStorage(){ 
+  try { 
+    return JSON.parse(localStorage.getItem(PRESET_KEY)||'[]'); 
+  } catch(e) { 
+    return []; 
+  } 
+}
 
-    function makePresetFromForm() {
-      const preset = {
-        mbti: (document.getElementById('mbti').value || '').trim(),
-        fourletter: (document.getElementById('fourletter').value || '').trim(),
-        enneagram: (document.getElementById('enneagram').value || '').trim(),
-        socionics: (document.getElementById('socionics').value || '').trim(),
-        neurotype: (document.getElementById('neurotype').value || '').trim(),
-        classpect: (document.getElementById('classpect').value || '').trim(),
-        ap: (document.getElementById('ap').value || '').trim(),
-        cep: (document.getElementById('cep').value || '').trim(),
-        ops: (document.getElementById('ops').value || '').trim()
-      };
-      const arr = loadPresetsFromStorage(); arr.push(preset); savePresetsToStorage(arr); renderPresets();
-    }
+function savePresetsToStorage(arr){ 
+  localStorage.setItem(PRESET_KEY, JSON.stringify(arr||[])); 
+}
 
-    function loadPreset(preset) {
-      document.getElementById('mbti').value = preset.mbti || '';
-      document.getElementById('fourletter').value = preset.fourletter || '';
-      document.getElementById('enneagram').value = preset.enneagram || '';
-      document.getElementById('socionics').value = preset.socionics || '';
-      document.getElementById('neurotype').value = preset.neurotype || '';
-      document.getElementById('classpect').value = preset.classpect || '';
-      document.getElementById('ap').value = preset.ap || '';
-      document.getElementById('cep').value = preset.cep || '';
-      document.getElementById('ops').value = preset.ops || '';
-      try { runSimilarityCheck(); } catch(e){ console.error(e); }
-    }
+function renderPresets(){
+  const arr = loadPresetsFromStorage();
+  presetsContainer.innerHTML = '';
+  if (!arr.length) { 
+    presetsContainer.innerHTML = '<div class="muted">No presets saved.</div>'; 
+    return; 
+  }
 
-    // event listeners
-    findBtn.addEventListener('click', () => {
-      try { runSimilarityCheck(); } catch (err) { console.error('runSimilarityCheck error:', err); resultsEl.innerHTML = '<p class="error">Error running search — see console.</p>'; }
+  arr.forEach((p,i) => {
+    const row = document.createElement('div'); 
+    row.className='preset-row';
+
+    // Preset button shows name + all fields
+    const btn = document.createElement('button');
+    btn.textContent = `${p.name || `Preset ${i+1}`} — ${p.mbti||'-'} | ${p.fourletter||'-'} | ${p.enneagram||'-'} | ${p.socionics||'-'} | ${p.neurotype||'-'} | ${p.classpect||'-'} | ${p.ap||'-'} | ${p.cep||'-'} | ${p.ops||'-'} ${p.fivecode || '-'}
+`;
+    btn.addEventListener('click', () => loadPreset(p));
+    row.appendChild(btn);
+
+    // Delete button
+    const del = document.createElement('button');
+    del.textContent = '❌'; 
+    del.style.background='#f88'; 
+    del.style.border='none'; 
+    del.style.borderRadius='4px'; 
+    del.addEventListener('click', () => { 
+      const updated = loadPresetsFromStorage().filter((_,idx)=>idx!==i); 
+      savePresetsToStorage(updated); 
+      renderPresets(); 
     });
-    savePresetBtn.addEventListener('click', makePresetFromForm);
-    document.addEventListener('DOMContentLoaded', renderPresets);
+    row.appendChild(del);
 
+    presetsContainer.appendChild(row);
+  });
+
+  // Clear all button
+  const clearAll = document.createElement('button'); 
+  clearAll.textContent='Clear All Presets'; 
+  clearAll.style.marginTop='8px'; 
+  clearAll.style.background='#faa';
+  clearAll.addEventListener('click', () => { 
+    if(confirm('Delete ALL presets?')){ 
+      localStorage.removeItem(PRESET_KEY); 
+      renderPresets(); 
+    } 
+  });
+  presetsContainer.appendChild(clearAll);
+}
+
+function makePresetFromForm() {
+  // Ask user for a name
+  const name = prompt("Enter a name for this preset:")?.trim();
+  if(!name) return; // cancel if empty
+
+  const preset = {
+    name,
+    mbti: (document.getElementById('mbti').value || '').trim(),
+    fourletter: (document.getElementById('fourletter').value || '').trim(),
+    enneagram: (document.getElementById('enneagram').value || '').trim(),
+    socionics: (document.getElementById('socionics').value || '').trim(),
+    neurotype: (document.getElementById('neurotype').value || '').trim(),
+    classpect: (document.getElementById('classpect').value || '').trim(),
+    ap: (document.getElementById('ap').value || '').trim(),
+    cep: (document.getElementById('cep').value || '').trim(),
+    ops: (document.getElementById('ops').value || '').trim(),
+	fivecode: (document.getElementById('fivecode').value || '').trim(),
+
+  };
+  const arr = loadPresetsFromStorage(); 
+  arr.push(preset); 
+  savePresetsToStorage(arr); 
+  renderPresets();
+}
+
+function loadPreset(preset) {
+  document.getElementById('mbti').value = preset.mbti || '';
+  document.getElementById('fourletter').value = preset.fourletter || '';
+  document.getElementById('enneagram').value = preset.enneagram || '';
+  document.getElementById('socionics').value = preset.socionics || '';
+  document.getElementById('neurotype').value = preset.neurotype || '';
+  document.getElementById('classpect').value = preset.classpect || '';
+  document.getElementById('ap').value = preset.ap || '';
+  document.getElementById('cep').value = preset.cep || '';
+  document.getElementById('ops').value = preset.ops || '';
+  document.getElementById('fivecode').value = preset.fivecode || '';
+  try { runSimilarityCheck(); } catch(e){ console.error(e); }
+}
+
+// event listeners
+findBtn.addEventListener('click', () => {
+  try { runSimilarityCheck(); } catch (err) { 
+    console.error('runSimilarityCheck error:', err); 
+    resultsEl.innerHTML = '<p class="error">Error running search — see console.</p>'; 
+  }
+});
+savePresetBtn.addEventListener('click', makePresetFromForm);
+document.addEventListener('DOMContentLoaded', renderPresets);
+
+
+
+  </script>
+  
+    <!-- Supabase client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Supabase config (as requested)
+    const SUPABASE_URL = "https://gmfkzzswgpewnylyceii.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtZmt6enN3Z3Bld255bHljZWlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5ODEyNzEsImV4cCI6MjA3ODU1NzI3MX0.pYWxDWYRDRNjrWGZJsM9KuW8cMWw_OktrRmlknAvOk0";
+
+    // create the client
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.className = isError ? 'status error' : 'status';
+    }
+    // load rows from your Supabase table named "characters" (change if your table name differs)
+    async function loadCharacters() {
+      try {
+        setStatus('Loading characters from Supabase...');
+        const { data, error } = await supabaseClient
+          .from('characters')
+          .select('*')
+          .order('name', { ascending: true });
+
+        if (error) {
+          console.error('Supabase error', error);
+          setStatus('Error loading from Supabase (see console)', true);
+          return;
+        }
+        // data is an array
+        characters = Array.isArray(data) ? data : [];
+        setStatus('Characters loaded: ' + characters.length + '. Ready.');
+        // populate UI controls
+        populateNotesFilter();
+        populateGenreFilter();
+        renderPresets();
+        document.getElementById('findBtn').disabled = false;
+      } catch (e) {
+        console.error(e);
+        setStatus('Unexpected error loading characters', true);
+      }
+    }
+
+    // fire the loader
+    loadCharacters();
   </script>
 </body>
 </html>
