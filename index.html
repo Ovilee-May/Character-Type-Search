@@ -315,7 +315,7 @@
 
   <div class="container">
     <div class="form-column">
-      <form id="testForm" onsubmit="return false;">
+		<form id="testForm" onsubmit="runSimilarityCheck(); return false;">
 	  
 		<label>Search by Name</label>
 		<input type="text" id="nameSearch" placeholder="Enter character name...">
@@ -378,6 +378,10 @@
           <option>SO7</option><option>SP7</option><option>SX7</option><option>SO8</option><option>SP8</option><option>SX8</option>
           <option>SO9</option><option>SP9</option><option>SX9</option>
         </select>
+		
+		<label>Enneagram Tritype</label>
+		<input id="tritype" type="text" placeholder="e.g. 594, 936, 471">
+
 
         <label>Socionics subtype</label>
         <input id="socionics" type="text" placeholder="e.g. ILI-Te">
@@ -411,7 +415,7 @@
         <select id="notesFilter"><option value="">All</option></select>
 
         <br>
-        <button type="button" id="findBtn" disabled>Find Matches</button>
+        <button type="submit" id="findBtn">Find Matches</button>
         <button type="button" id="savePresetBtn">Save Preset</button>
 		<button type="button" id="clearBtn" style="background:#444;">Clear</button>
 
@@ -425,16 +429,16 @@
         <label><input type="checkbox" id="useMbti" checked> Use MBTI (w/ Jumpers)</label>
         <label><input type="checkbox" id="use4Letter" checked> Use MBTI (4-letter)</label>
         <label><input type="checkbox" id="useEnneagram" checked> Use Enneagram</label>
+		<label><input type="checkbox" id="useTritype" checked> Use Enneagram Tritype</label>
         <label><input type="checkbox" id="useSocionics" checked> Use Socionics</label>
+        <label><input type="checkbox" id="useCep" checked> Use Enneagram Instinct</label>
         <label><input type="checkbox" id="useNeurotype" checked> Use Neurotype</label>
         <label><input type="checkbox" id="useClasspect" checked> Use Classpect</label>
         <label><input type="checkbox" id="useOps" checked> Use OPS Animals</label>
         <label><input type="checkbox" id="useAp" checked> Use Attitudinal Psyche</label>
 		<label><input type="checkbox" id="useFivecode" checked> Use 5-Scale Typology</label>
 
-		
-        <label><input type="checkbox" id="useCep" checked> Use Enneagram Instinct</label>
-
+	
 
         <h3>Exclude</h3>
         <label><input type="checkbox" id="excludeSide"> Exclude side / supporting characters</label>
@@ -481,7 +485,8 @@
 	  document.getElementById('useOps').checked = true;
 	  document.getElementById('useAp').checked = true;
 	  document.getElementById('useCep').checked = true;
-	document.getElementById('useFivecode').checked = true;
+	  document.getElementById('useFivecode').checked = true;
+	  document.getElementById('useTritype').checked = true;
 
 
 	  // Clear search results so the user has visual feedback
@@ -587,6 +592,30 @@
       return 0;
     }
 
+	function tritypeMatch(u, c) {
+	  if (!u || !c) return 0;
+
+	  const clean = t =>
+		String(t)
+		  .replace(/[^\d]/g, '')  // strip everything except digits
+		  .slice(0,3)             // take first 3 digits only
+		  .split('');
+
+	  const U = clean(u);
+	  const C = clean(c);
+
+	  if (U.length < 3 || C.length < 3) return 0;
+
+	  // core mismatch → zero score
+	  if (U[0] !== C[0]) return 0;
+
+	  // Compare the sets of fixes (2 + 3)
+	  const uFix = [U[1], U[2]].sort().join('');
+	  const cFix = [C[1], C[2]].sort().join('');
+
+	  return uFix === cFix ? 1 : 0.5;
+	}
+
 
     function opsMatch(u, c) {
       if (!u || !c) return 0;
@@ -654,12 +683,12 @@
 	  const charCep = getProp(char, 'cep', 'instinct');
 	  const charOps = getProp(char, 'ops', 'animals', 'ops_animals', 'animal');
 	  const charFive  = getProp(char, 'fivecode', '5code', '5Code', 'span5', 'scale5');
-
+	  const charTri = getProp(char, 'tritype', 'Tritype', 'tri');
 
 	  const weights = {
 		mbti: 0.25, fourletter: 0.15, enneagram: 0.10, socionics: 0.08,
 		neurotype: 0.10, classpect: 0.05, ap: 0.05, cep: 0.05, ops: 0.05, 
-		fivecode: 0.10,
+		fivecode: 0.10, tritype: 0.08,
 	  };
 
 	  const active = [];
@@ -673,6 +702,8 @@
 	  if (document.getElementById('useCep').checked) active.push('cep');
 	  if (document.getElementById('useOps').checked) active.push('ops');
 	  if (document.getElementById('useFivecode').checked) active.push('fivecode');
+	  if (document.getElementById('useTritype').checked) active.push('tritype');
+
 
 
 	  const totalWeight = active.reduce((s,k)=> s + (weights[k]||0), 0) || 1;
@@ -689,6 +720,8 @@
 	  if (active.includes('cep')) score += cepMatch(user.cep, charCep) * w('cep');
 	  if (active.includes('ops')) score += opsMatch(user.ops, charOps) * w('ops');
 	  if (active.includes('fivecode')) score += fivecodeMatch(user.fivecode, charFive) * w('fivecode');
+	  if (active.includes('tritype')) score += tritypeMatch(user.tritype, charTri) * w('tritype');
+
 
 	  return score;
 	}
@@ -747,7 +780,9 @@
         cep: (document.getElementById('cep').value || '').trim(),
         fourletter: (document.getElementById('fourletter').value || '').trim(),
         ops: (document.getElementById('ops').value || '').trim(),
+		tritype: (document.getElementById('tritype').value || '').trim(),
 		fivecode: (document.getElementById('fivecode').value || '').trim(),
+		tritype: (document.getElementById('tritype').value || '').trim(),
       };
 
       const genreFilterRaw = document.getElementById('genreFilter').value;
@@ -827,6 +862,7 @@
                 <div class="small"><strong>Instinct:</strong> ${escapeHtml(c.cep || 'N/A')} • <strong>AP:</strong> ${escapeHtml(c.ap || 'N/A')}</div>
                 <div class="small"><strong>OPS:</strong> ${escapeHtml(opsText)} • <strong>Neuro:</strong> ${escapeHtml(c.neurotype || 'N/A')}</div>
 				<div class="small"><strong>5Span:</strong> ${escapeHtml(c["5Code"] || 'N/A')}</div>
+				<div class="small"><strong>Tritype:</strong> ${escapeHtml(c.tritype || c.Tritype || 'N/A')}</div>
                 <div style="margin-top:10px;font-weight:600;color:#222">${similarityPct}%</div>
 				<div class="similarity-bar">
 				  <div class="similarity-bar-inner" style="width:${similarityPct}%"></div>
